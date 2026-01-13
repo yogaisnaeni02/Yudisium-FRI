@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Exceptions\AccountNotRegisteredException;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -41,11 +43,31 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // Check if user exists first
+        $user = DB::table('users')->where('email', $this->string('email'))->first();
+        
+        if (!$user) {
+            RateLimiter::hit($this->throttleKey());
+            
+            throw ValidationException::withMessages([
+                'email' => 'Akun tidak terdaftar di sistem.',
+            ]);
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check if user has mahasiswa role
+        if (Auth::user()->role !== 'mahasiswa') {
+            Auth::logout();
+            
+            throw ValidationException::withMessages([
+                'email' => 'Akun ini bukan akun mahasiswa. Silahkan gunakan akun mahasiswa untuk login.',
             ]);
         }
 

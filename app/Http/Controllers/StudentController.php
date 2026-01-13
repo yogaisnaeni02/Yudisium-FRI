@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\Submission;
 use App\Models\Document;
+use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -36,11 +37,18 @@ class StudentController extends Controller
         $documents = $submission->documents()->get();
         $progress = $submission->getProgressPercentage();
 
+        // Get latest 5 published articles for dashboard
+        $latestArticles = Article::published()
+            ->orderBy('published_at', 'desc')
+            ->limit(5)
+            ->get();
+
         return view('student.dashboard', [
             'student' => $student,
             'submission' => $submission,
             'documents' => $documents,
             'progress' => $progress,
+            'latestArticles' => $latestArticles,
         ]);
     }
 
@@ -260,6 +268,38 @@ class StudentController extends Controller
             'submission' => $submission,
             'documents' => $documents,
             'progress' => $progress,
+        ]);
+    }
+
+    /**
+     * Display articles/information page for students.
+     */
+    public function articles(): View
+    {
+        $articles = Article::published()
+            ->orderBy('published_at', 'desc')
+            ->paginate(12);
+
+        return view('student.articles', [
+            'articles' => $articles,
+        ]);
+    }
+
+    /**
+     * Display single article detail.
+     */
+    public function showArticle(Article $article): View
+    {
+        // Only show published articles
+        if ($article->status !== 'published' || ($article->published_at && $article->published_at->isFuture())) {
+            abort(404);
+        }
+
+        // Increment views
+        $article->incrementViews();
+
+        return view('student.article-detail', [
+            'article' => $article,
         ]);
     }
 }

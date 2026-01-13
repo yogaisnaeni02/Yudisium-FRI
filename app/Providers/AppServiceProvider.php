@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Share student data to dashboard layout if user is a student
+        View::composer('layouts.dashboard', function ($view) {
+            if (Auth::check() && Auth::user()->role === 'student') {
+                $student = Student::where('user_id', Auth::user()->id)->first();
+                $view->with('student', $student);
+            }
+        });
     }
 }

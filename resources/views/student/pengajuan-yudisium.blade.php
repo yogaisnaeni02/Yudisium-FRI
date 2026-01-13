@@ -1,56 +1,18 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('title', 'Pengajuan Yudisium')
+@section('page-title', 'Pengajuan Yudisium')
+
+@section('breadcrumb')
+    <a href="{{ route('student.dashboard') }}" class="text-green-600 hover:text-green-700">Dashboard</a>
+    <span class="mx-2 text-gray-400">/</span>
+    <span class="text-gray-900">Pengajuan Yudisium</span>
+@endsection
 
 @section('content')
-<div class="min-h-screen bg-gray-100 flex">
-    <!-- Left Sidebar -->
-    <aside class="w-64 bg-gray-50 border-r border-gray-200 hidden md:block">
-        <div class="px-6 py-6 border-b border-gray-200 flex items-center gap-3">
-            <div class="w-10 h-10 bg-green-700 rounded flex items-center justify-center text-white font-bold">TI</div>
-            <div>
-                <div class="text-sm font-semibold">Fakultas Rekayasa Industri</div>
-                <div class="text-xs text-gray-500">Telkom University</div>
-            </div>
-        </div>
-        <nav class="px-4 py-6 space-y-2">
-            <a href="{{ route('student.dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100">
-                <span class="w-5">🏠</span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('student.pengajuan-yudisium') }}" class="flex items-center gap-3 px-3 py-2 rounded bg-green-600 text-white font-semibold">
-                <span class="w-5">🗂️</span>
-                <span>Pengajuan Yudisium</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100">
-                <span class="w-5">📄</span>
-                <span>Status Yudisium</span>
-            </a>
-
-            <div class="mt-8 text-xs text-gray-500 uppercase">Support</div>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
-                <span>❓</span> Help & Support
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
-                <span>⚙️</span> Settings
-            </a>
-        </nav>
-    </aside>
-
-    <!-- Main content area -->
-    <main class="flex-1">
-        <!-- Top header -->
-        <header class="bg-green-700 text-white px-6 py-4 flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Pengajuan Yudisium</h2>
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-white/80">Welcome, {{ $student->nama ?? $student->user->name }}</div>
-                <div class="w-10 h-10 bg-white rounded-full overflow-hidden">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($student->nama ?? $student->user->name) }}&background=ffffff&color=007f00" alt="avatar" class="w-full h-full object-cover">
-                </div>
-            </div>
-        </header>
-
-        <div class="p-8">
-            <!-- Upload panel: sidebar + per-document sections -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+<div class="space-y-6">
+    <!-- Upload panel: sidebar + per-document sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     @php
                         $groups = [
                             'Berkas Identitas & Akademik' => [
@@ -80,7 +42,12 @@
                 <aside class="lg:col-span-1">
                     <div class="bg-white rounded-lg shadow sticky top-8">
                         <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-lg">
-                            <h4 class="font-semibold">📋 Upload Berkas</h4>
+                            <h4 class="font-semibold flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                Upload Berkas
+                            </h4>
                             <p class="text-sm text-green-100 mt-1">{{ $progress }}% Selesai</p>
                         </div>
 
@@ -111,7 +78,12 @@
                             <!-- Info Box -->
                             <div class="mt-6 pt-6 border-t border-gray-200">
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <p class="text-xs font-bold text-blue-900 mb-2">💡 Catatan Penting</p>
+                                    <p class="text-xs font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Catatan Penting
+                                    </p>
                                     <ul class="text-xs text-blue-800 space-y-1">
                                         <li>• Pastikan semua berkas lengkap</li>
                                         <li>• Format: PDF, DOC, DOCX</li>
@@ -144,7 +116,12 @@
 
                                     <!-- Currently Uploaded Files Section -->
                                     <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                        <p class="text-sm font-semibold text-blue-900 mb-4">📁 Berkas yang Sudah Diunggah</p>
+                                        <p class="text-sm font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                            </svg>
+                                            Berkas yang Sudah Diunggah
+                                        </p>
                                         <div class="space-y-3">
                                             @php $hasUploaded = false; $allDisabled = true; $hasRejected = false; @endphp
                                             @foreach($docs as $type)
@@ -167,7 +144,12 @@
                                                     <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
                                                         <div class="flex-1">
                                                             <p class="text-sm font-medium text-gray-900">{{ $type }}</p>
-                                                            <p class="text-xs text-gray-600 mt-1">📄 {{ $doc->name }}</p>
+                                                            <p class="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                                {{ $doc->name }}
+                                                            </p>
                                                             <div class="flex items-center gap-3 mt-2">
                                                                 <span class="text-xs px-2 py-1 rounded"
                                                                     @switch($doc->status)
@@ -178,18 +160,49 @@
                                                                     @endswitch
                                                                 >
                                                                     @switch($doc->status)
-                                                                        @case('approved') ✅ Disetujui @break
-                                                                        @case('pending') ⏳ Menunggu Review @break
-                                                                        @case('revision') 🔄 Perlu Revisi @break
-                                                                        @case('rejected') ❌ Ditolak @break
+                                                                        @case('approved') 
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                                </svg>
+                                                                                Disetujui
+                                                                            </span>
+                                                                            @break
+                                                                        @case('pending') 
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                                </svg>
+                                                                                Menunggu Review
+                                                                            </span>
+                                                                            @break
+                                                                        @case('revision') 
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                                </svg>
+                                                                                Perlu Revisi
+                                                                            </span>
+                                                                            @break
+                                                                        @case('rejected') 
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                                Ditolak
+                                                                            </span>
+                                                                            @break
                                                                     @endswitch
                                                                 </span>
                                                                 <span class="text-xs text-gray-500">Diupload: {{ $doc->created_at->format('d M Y H:i') }}</span>
                                                             </div>
                                                         </div>
                                                         @if($submission->status === 'draft' && $doc->status === 'rejected')
-                                                            <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" class="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded hover:bg-blue-100">
-                                                                ✏️ Ganti
+                                                            <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" class="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded hover:bg-blue-100 flex items-center gap-1">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                                </svg>
+                                                                Ganti
                                                             </button>
                                                         @endif
                                                     </div>
@@ -203,7 +216,12 @@
 
                                     <!-- Upload/Replace Files Section -->
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900 mb-4">📤 Unggah atau Ganti Berkas</p>
+                                        <p class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                            </svg>
+                                            Unggah atau Ganti Berkas
+                                        </p>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             @foreach($docs as $type)
                                                 @php 
@@ -250,7 +268,10 @@
                                                             <div class="flex gap-2">
                                                                 <button type="button" onclick="uploadSingleDocument(event, '{{ $slug }}', '{{ $groupSlug }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-3 rounded">Unggah Ganti</button>
                                                                 <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" class="text-xs text-gray-600 hover:text-gray-800">
-                                                                    ✕ Batal
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                    </svg>
+                                                                    Batal
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -261,7 +282,12 @@
                                     </div>
 
                                     <div class="flex items-center gap-3">
-                                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-lg transition" @if($allDisabled) disabled @endif>✓ Unggah Semua Berkas Seksi Ini</button>
+                                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-lg transition flex items-center gap-2" @if($allDisabled) disabled @endif>
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Unggah Semua Berkas Seksi Ini
+                                        </button>
                                         <button type="button" onclick="document.querySelector('#group-{{ $groupSlug }} [data-group-form]').reset()" class="text-sm text-gray-600">Reset form</button>
                                     </div>
                                 </form>
@@ -271,19 +297,20 @@
                 </div>
             </div>
 
-            <!-- Submit Button (if status is draft) -->
-            @if($submission->status === 'draft' && $documents->count() > 0)
-            <div class="mt-8">
-                <form action="{{ route('student.submit-application') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition">
-                        ✓ Kirim Pengajuan Yudisium
-                    </button>
-                </form>
-            </div>
-            @endif
-        </div>
-    </main>
+    <!-- Submit Button (if status is draft) -->
+    @if($submission->status === 'draft' && $documents->count() > 0)
+    <div class="mt-8">
+        <form action="{{ route('student.submit-application') }}" method="POST">
+            @csrf
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition shadow-lg hover:shadow-xl flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Kirim Pengajuan Yudisium
+            </button>
+        </form>
+    </div>
+    @endif
 </div>
 
 <!-- Upload JS handlers -->
@@ -328,18 +355,18 @@
             const fileExt = file.name.split('.').pop().toLowerCase();
             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
             
-            let status = '✅';
+            let statusIcon = '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
             let isValid = true;
 
             // Check type
             if (!ALLOWED_TYPES.includes(fileExt)) {
-                status = '❌';
+                statusIcon = '<svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
                 isValid = false;
                 hasWarnings = true;
             }
             // Check size
             else if (file.size > MAX_FILE_SIZE) {
-                status = '⚠️';
+                statusIcon = '<svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
                 isValid = false;
                 hasWarnings = true;
             }
@@ -347,7 +374,7 @@
             const fileItem = document.createElement('li');
             fileItem.className = 'flex items-center gap-2 p-2 bg-gray-100 rounded';
             fileItem.innerHTML = `
-                <span>${status}</span>
+                <span>${statusIcon}</span>
                 <span class="flex-1 truncate">${file.name}</span>
                 <span class="text-gray-500">${fileSizeMB}MB</span>
             `;
@@ -411,7 +438,7 @@
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-green-50 border border-green-200 rounded-lg';
                 const count = data.documents ? data.documents.length : 0;
-                alert.innerHTML = `<p class="text-green-700"><strong>✅ Sukses!</strong> ${count} file berhasil diunggah.</p>`;
+                alert.innerHTML = `<p class="text-green-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><strong>Sukses!</strong> ${count} file berhasil diunggah.</p>`;
                 const section = document.querySelector(`#group-${groupSlug} .p-6`);
                 section.insertBefore(alert, section.firstChild);
                 setTimeout(() => alert.remove(), 4000);
@@ -423,7 +450,7 @@
             } else {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
-                alert.innerHTML = `<p class="text-red-700"><strong>❌ Gagal!</strong> ${data.message || 'Unggah gagal'}</p>`;
+                alert.innerHTML = `<p class="text-red-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><strong>Gagal!</strong> ${data.message || 'Unggah gagal'}</p>`;
                 const section = document.querySelector(`#group-${groupSlug} .p-6`);
                 section.insertBefore(alert, section.firstChild);
                 setTimeout(() => alert.remove(), 5000);
@@ -432,7 +459,7 @@
         .catch(err => {
             const alert = document.createElement('div');
             alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
-            alert.innerHTML = `<p class="text-red-700"><strong>❌ Error:</strong> ${err.message}</p>`;
+            alert.innerHTML = `<p class="text-red-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><strong>Error:</strong> ${err.message}</p>`;
             const section = document.querySelector(`#group-${groupSlug} .p-6`);
             section.insertBefore(alert, section.firstChild);
         })
@@ -475,7 +502,7 @@
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-green-50 border border-green-200 rounded-lg';
                 const count = data.documents ? data.documents.length : 0;
-                alert.innerHTML = `<p class="text-green-700"><strong>✅ Sukses!</strong> ${count} file berhasil diunggah.</p>`;
+                alert.innerHTML = `<p class="text-green-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><strong>Sukses!</strong> ${count} file berhasil diunggah.</p>`;
                 form.parentNode.insertBefore(alert, form);
                 setTimeout(() => alert.remove(), 4000);
                 form.reset();
@@ -491,7 +518,7 @@
             } else {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
-                alert.innerHTML = `<p class="text-red-700"><strong>❌ Gagal!</strong> ${data.message || 'Unggah gagal'}</p>`;
+                alert.innerHTML = `<p class="text-red-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><strong>Gagal!</strong> ${data.message || 'Unggah gagal'}</p>`;
                 form.parentNode.insertBefore(alert, form);
                 setTimeout(() => alert.remove(), 5000);
             }
@@ -499,7 +526,7 @@
         .catch(err => {
             const alert = document.createElement('div');
             alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
-            alert.innerHTML = `<p class="text-red-700"><strong>❌ Error:</strong> ${err.message}</p>`;
+            alert.innerHTML = `<p class="text-red-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><strong>Error:</strong> ${err.message}</p>`;
             form.parentNode.insertBefore(alert, form);
         })
         .finally(() => {
