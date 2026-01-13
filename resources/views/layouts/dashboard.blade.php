@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased bg-gray-100">
-        <div class="min-h-screen flex">
+        <div class="min-h-screen flex w-full">
             <!-- Left Sidebar -->
             <aside class="w-64 bg-white border-r border-gray-200 hidden md:block fixed h-screen">
                 <div class="px-6 py-6 border-b border-gray-200">
@@ -94,9 +94,9 @@
             </aside>
 
             <!-- Main Content Area -->
-            <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+            <div class="flex-1 md:ml-64 flex flex-col w-full">
                 <!-- Professional Top Bar -->
-                <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+                <header class="bg-white border-b border-gray-200 z-40 shadow-sm">
                     <div class="px-4 sm:px-6 lg:px-8">
                         <div class="flex items-center justify-between h-16">
                             <!-- Left: Page Title & Breadcrumb -->
@@ -214,7 +214,7 @@
                 </header>
 
                 <!-- Page Content -->
-                <main class="p-4 sm:p-6 lg:p-8">
+                <main class="w-full flex-1 p-4 sm:p-6 lg:p-8">
                     @if(session('success'))
                         <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg shadow-sm">
                             <div class="flex items-center">
@@ -230,7 +230,8 @@
                 </main>
 
                 <!-- Footer -->
-                <footer class="bg-white border-t border-gray-200 mt-auto">
+                @if (!request()->routeIs('admin.submission-detail'))
+                <footer class="w-full bg-white border-t border-gray-200 mt-auto">
                     <div class="px-4 sm:px-6 lg:px-8 py-4">
                         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                             <div class="flex items-center gap-2 text-sm text-gray-600">
@@ -242,6 +243,7 @@
                         </div>
                     </div>
                 </footer>
+                @endif
             </div>
         </div>
 
@@ -298,7 +300,7 @@
         <script>
             // Mobile menu toggle
             const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            const closeBtn = document.getElementById('close-mobile-menu');
             const mobileSidebar = document.getElementById('mobile-sidebar');
             const mobileOverlay = document.getElementById('mobile-sidebar-overlay');
 
@@ -318,8 +320,8 @@
                 mobileMenuBtn.addEventListener('click', openMobileMenu);
             }
 
-            if (closeMobileMenu) {
-                closeMobileMenu.addEventListener('click', closeMobileMenu);
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeMobileMenu);
             }
 
             if (mobileOverlay) {

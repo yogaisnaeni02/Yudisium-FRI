@@ -169,6 +169,75 @@ class AdminController extends Controller
     }
 
     /**
+     * Batch update multiple documents status.
+     */
+    public function batchUpdateDocuments(Request $request, Submission $submission)
+    {
+        \Log::info('batchUpdateDocuments called', [
+            'submission_id' => $submission->id,
+            'request_documents' => $request->input('documents'),
+        ]);
+
+        $request->validate([
+            'documents' => 'required|array',
+            'documents.*.status' => 'nullable|in:approved,revision,rejected',
+            'documents.*.feedback' => 'nullable|string|max:1000',
+        ]);
+
+        $documents = $request->input('documents');
+        $updatedCount = 0;
+
+        foreach ($documents as $documentId => $data) {
+            // Skip if status is not set
+            if (!isset($data['status']) || empty($data['status'])) {
+                continue;
+            }
+
+            $document = Document::findOrFail($documentId);
+            
+            // Verify document belongs to this submission
+            if ($document->submission_id !== $submission->id) {
+                continue;
+            }
+
+            \Log::info('Updating document', [
+                'document_id' => $document->id,
+                'old_status' => $document->status,
+                'new_status' => $data['status'],
+            ]);
+
+            $document->update([
+                'status' => $data['status'],
+                'feedback' => $data['feedback'] ?? null,
+            ]);
+
+            \Log::info('Document updated', [
+                'document_id' => $document->id,
+                'status_now' => $document->status,
+            ]);
+
+            \App\Models\Activity::log('verify', 'Memverifikasi dokumen: ' . $document->type . ' - Status: ' . $data['status'], 'Document', $document->id);
+            $updatedCount++;
+        }
+
+        // Update submission status based on all documents
+        $submission->refresh();
+        $allApproved = $submission->documents()
+            ->where('status', '!=', 'approved')
+            ->doesntExist();
+
+        if ($allApproved && $submission->documents()->count() > 0) {
+            $submission->update(['status' => 'approved']);
+            \App\Models\Activity::log('approve', 'Semua dokumen disetujui, pengajuan diterima', 'Submission', $submission->id);
+        } elseif (in_array($submission->status, ['draft', 'submitted'])) {
+            $submission->update(['status' => 'under_review']);
+        }
+
+        return redirect()->back()
+            ->with('success', "Total {$updatedCount} dokumen berhasil diperbarui!");
+    }
+
+    /**
      * Download document.
      */
     public function downloadDocument(Document $document)
