@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class LoginRequest extends FormRequest
+class AdminLoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -35,7 +35,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Attempt to authenticate the request's credentials for admin.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -62,12 +62,12 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Check if user has mahasiswa role
-        if (Auth::user()->role !== 'mahasiswa') {
+        // Check if user has admin role
+        if (Auth::user()->role !== 'admin') {
             Auth::logout();
             
             throw ValidationException::withMessages([
-                'email' => 'Akun ini bukan akun mahasiswa. Silahkan gunakan akun mahasiswa untuk login.',
+                'email' => 'Akun ini bukan akun admin. Silahkan gunakan akun admin untuk login.',
             ]);
         }
 
@@ -102,6 +102,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

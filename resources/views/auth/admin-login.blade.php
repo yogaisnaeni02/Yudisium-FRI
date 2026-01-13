@@ -1,16 +1,16 @@
 <x-guest-layout>
-    @section('title', 'Masuk')
+    @section('title', 'Masuk Admin')
     
     <!-- Header -->
     <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-2">Selamat Datang</h2>
-        <p class="text-gray-600">Masuk ke akun SIYU Anda</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Masuk Admin</h2>
+        <p class="text-gray-600">Masuk ke akun admin SIYU</p>
     </div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
+    <form method="POST" action="{{ route('admin.login') }}">
         @csrf
 
         <!-- Email Address -->
@@ -30,9 +30,9 @@
 
         <!-- Password -->
         <div class="mb-5">
-            <x-input-label for="password" :value="__('Password')" class="text-gray-700 font-semibold mb-2" />
+            <x-input-label for="adminPassword" :value="__('Password')" class="text-gray-700 font-semibold mb-2" />
             <div class="relative">
-                <x-text-input id="password" 
+                <x-text-input id="adminPassword" 
                     class="block mt-1 w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg pr-10"
                     type="password"
                     name="password"
@@ -42,9 +42,9 @@
                 <button 
                     type="button" 
                     class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    id="togglePassword"
-                    onclick="togglePasswordVisibility()">
-                    <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    id="toggleAdminPassword"
+                    onclick="toggleAdminPasswordVisibility()">
+                    <svg id="eyeAdminIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
@@ -72,19 +72,14 @@
 
         <!-- Submit Button -->
         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg hover:shadow-xl mb-4">
-            {{ __('Masuk') }}
+            {{ __('Masuk Admin') }}
         </button>
-
-        <!-- Info -->
-        <div class="text-center text-sm text-gray-600">
-            Hubungi admin untuk mendapatkan akun
-        </div>
     </form>
 
     <script>
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const eyeIcon = document.getElementById('eyeIcon');
+        function toggleAdminPasswordVisibility() {
+            const passwordInput = document.getElementById('adminPassword');
+            const eyeIcon = document.getElementById('eyeAdminIcon');
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -95,4 +90,4 @@
             }
         }
     </script>
-</x-guest-layout>
+</x-admin-guest-layout>

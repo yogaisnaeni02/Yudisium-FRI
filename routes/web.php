@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/verifikasi-pengajuan', [AdminController::class, 'verifikasiPengajuan'])->name('verifikasi-pengajuan');
     Route::get('/submission/{submission}', [AdminController::class, 'viewSubmission'])->name('submission-detail');
+    Route::patch('/submission/{submission}/documents-batch', [AdminController::class, 'updateDocumentsBatch'])->name('update-documents-batch');
     Route::patch('/document/{document}/status', [AdminController::class, 'updateDocumentStatus'])->name('update-document-status');
     Route::get('/document/{document}/download', [AdminController::class, 'downloadDocument'])->name('download-document');
     
