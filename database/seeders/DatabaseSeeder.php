@@ -104,5 +104,8 @@ class DatabaseSeeder extends Seeder
             'student_id' => $student2->id,
             'status' => 'draft',
         ]);
+
+        // Seed articles
+        $this->call(ArticleSeeder::class);
     }
 }

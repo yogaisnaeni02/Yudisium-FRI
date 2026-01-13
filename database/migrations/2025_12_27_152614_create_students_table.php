@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('total_sks');
             $table->enum('status_kelulusan', ['lulus', 'belum_lulus'])->default('belum_lulus');
             $table->json('mata_kuliah')->nullable(); // Status kelulusan mata kuliah
+            $table->string('kode_dosen');
             $table->timestamps();
         });
     }
