@@ -12,9 +12,9 @@
 @endsection
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 w-full">
     <!-- Status & Progress Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
             <h3 class="text-sm font-semibold text-gray-600 mb-3">STATUS PENGAJUAN</h3>
             <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold"
@@ -69,9 +69,9 @@
     </div>
 
     <!-- Info Mahasiswa -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition w-full">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">INFORMASI MAHASISWA</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
             <div>
                 <p class="text-sm text-gray-600 mb-1">NIM</p>
                 <p class="font-semibold text-gray-900 text-lg">{{ $submission->student->nim }}</p>
@@ -127,8 +127,8 @@
     @endphp
 
     <!-- Group Navigation Buttons -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="flex flex-wrap gap-3">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div class="flex flex-wrap gap-2">
             @foreach($groups as $groupName => $groupData)
                 @php
                     $groupSlug = \Illuminate\Support\Str::slug($groupName);
@@ -140,7 +140,7 @@
                 <button type="button" 
                     onclick="showGroup('{{ $groupSlug }}')" 
                     data-group="{{ $groupSlug }}"
-                    class="group-btn flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md {{ $loop->first ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    class="group-btn flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow-md {{ $loop->first ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                     {!! $groupData['icon'] !!}
                     <span>{{ $groupName }}</span>
                     <span class="px-2 py-0.5 rounded-full text-xs {{ $loop->first ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-700' }}">
@@ -152,131 +152,128 @@
         </div>
     </div>
 
-    <div class="space-y-6">
-        @foreach($groups as $groupName => $groupData)
-            @php
-                $groupSlug = \Illuminate\Support\Str::slug($groupName);
-                $groupDocuments = $submission->documents->filter(function($doc) use ($groupData) {
-                    return in_array($doc->type, $groupData['docs']);
-                });
-            @endphp
-            
-            @if($groupDocuments->count() > 0)
-            <div class="group-content bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $loop->first ? '' : 'hidden' }}" data-group="{{ $groupSlug }}">
-                <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
-                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-                        {!! $groupData['icon'] !!}
-                        <span>{{ $groupName }}</span>
-                        <span class="text-sm font-normal text-blue-100 ml-2">
-                            ({{ $groupDocuments->count() }} dokumen)
-                        </span>
-                    </h3>
-                </div>
-                <div class="divide-y divide-gray-200">
-                    @foreach($groupDocuments as $document)
-                        <div class="p-6 hover:bg-gray-50 transition">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex-1">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ $document->type }}</h4>
-                                    <p class="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        {{ $document->name }}
-                                    </p>
-                                    
-                                    <!-- Document Info Grid -->
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                                        <div>
-                                            <p class="text-xs text-gray-500">Diupload</p>
-                                            <p class="font-medium text-gray-900">{{ $document->created_at->format('d M Y H:i') }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Terakhir Diubah</p>
-                                            <p class="font-medium text-gray-900">{{ $document->updated_at->format('d M Y H:i') }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Status</p>
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1"
-                                                @switch($document->status)
-                                                    @case('pending')
-                                                        style="background-color: #f3f4f6; color: #4b5563;"
-                                                        @break
-                                                    @case('approved')
-                                                        style="background-color: #dcfce7; color: #166534;"
-                                                        @break
-                                                    @case('revision')
-                                                        style="background-color: #fef3c7; color: #92400e;"
-                                                        @break
-                                                    @case('rejected')
-                                                        style="background-color: #fee2e2; color: #991b1b;"
-                                                        @break
-                                                @endswitch
-                                            >
-                                                {{ ucfirst($document->status) }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <a href="{{ route('admin.download-document', $document) }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                                </svg>
-                                                Download File
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Feedback Section -->
-                            @if($document->feedback)
-                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-r">
-                                <p class="text-sm font-semibold text-yellow-900 mb-1 flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                    </svg>
-                                    Feedback Admin:
-                                </p>
-                                <p class="text-sm text-yellow-800">{{ $document->feedback }}</p>
-                            </div>
-                            @endif
-
-                            <!-- Update Status Form -->
-                            <form action="{{ route('admin.update-document-status', $document) }}" method="POST" class="mt-4 bg-gray-50 p-4 rounded-lg">
-                                @csrf
-                                @method('PATCH')
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Ubah Status</label>
-                                        <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                            <option value="">Pilih Status</option>
-                                            <option value="approved" {{ $document->status === 'approved' ? 'selected' : '' }}>Disetujui</option>
-                                            <option value="revision" {{ $document->status === 'revision' ? 'selected' : '' }}>Perlu Revisi</option>
-                                            <option value="rejected" {{ $document->status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan/Feedback</label>
-                                        <input type="text" name="feedback" placeholder="Catatan untuk mahasiswa..." 
-                                            value="{{ $document->feedback }}"
-                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    </div>
-                                    <div class="flex items-end">
-                                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm hover:shadow">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    <form id="batchUpdateForm" action="{{ route('admin.batch-update-documents', $submission) }}" method="POST">
+        @csrf
+        @method('PATCH')
+        <div class="space-y-6">
+            @foreach($groups as $groupName => $groupData)
+                @php
+                    $groupSlug = \Illuminate\Support\Str::slug($groupName);
+                    $groupDocuments = $submission->documents->filter(function($doc) use ($groupData) {
+                        return in_array($doc->type, $groupData['docs']);
+                    });
+                @endphp
+                
+                @if($groupDocuments->count() > 0)
+                <div class="group-content bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden {{ $loop->first ? '' : 'hidden' }}" data-group="{{ $groupSlug }}">
+                    <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+                        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                            {!! $groupData['icon'] !!}
+                            <span>{{ $groupName }}</span>
+                            <span class="text-sm font-normal text-blue-100 ml-2">
+                                ({{ $groupDocuments->count() }} dokumen)
+                            </span>
+                        </h3>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        @foreach($groupDocuments as $document)
+                            <div class="p-5 hover:bg-blue-50 transition border-b border-gray-100 last:border-b-0">
+                                <!-- Header: Title, Filename, and Status Badge -->
+                                <div class="flex items-center justify-between gap-3 mb-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-bold text-gray-900 mb-0.5 truncate">{{ $document->type }}</h4>
+                                        <p class="text-xs text-gray-600 flex items-center gap-1 truncate">
+                                            <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                             </svg>
-                                            Simpan Status
-                                        </button>
+                                            <span class="truncate">{{ $document->name }}</span>
+                                        </p>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 whitespace-nowrap status-badge-{{ $document->id }}"
+                                        @switch($document->status)
+                                            @case('pending')
+                                                style="background-color: #f3f4f6; color: #4b5563;"
+                                                @break
+                                            @case('approved')
+                                                style="background-color: #dcfce7; color: #166534;"
+                                                @break
+                                            @case('revision')
+                                                style="background-color: #fef3c7; color: #92400e;"
+                                                @break
+                                            @case('rejected')
+                                                style="background-color: #fee2e2; color: #991b1b;"
+                                                @break
+                                        @endswitch
+                                    >
+                                        <span class="status-text-{{ $document->id }}">{{ ucfirst($document->status) }}</span>
+                                    </span>
+                                </div>
+
+                                <!-- Metadata Row -->
+                                <div class="flex items-center justify-between gap-3 mb-3 text-xs">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-1 text-gray-600">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span>{{ $document->created_at->format('d M Y') }}</span>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('admin.download-document', $document) }}" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 whitespace-nowrap">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        Download
+                                    </a>
+                                </div>
+
+                                <!-- Feedback Section -->
+                                @if($document->feedback)
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 px-3 py-2 mb-3 rounded-r text-sm">
+                                    <p class="text-xs font-semibold text-yellow-900 mb-1 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                        Feedback:
+                                    </p>
+                                    <p class="text-xs text-yellow-800">{{ $document->feedback }}</p>
+                                </div>
+                                @endif
+
+                                <!-- Update Status Form -->
+                                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3.5 rounded-lg border border-gray-200">
+                                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 items-end">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Status</label>
+                                            <select name="documents[{{ $document->id }}][status]" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs doc-status" data-doc-id="{{ $document->id }}" data-group="{{ $groupSlug }}">
+                                                <option value="">Pilih</option>
+                                                <option value="approved" {{ $document->status === 'approved' ? 'selected' : '' }}>✓ Setujui</option>
+                                                <option value="revision" {{ $document->status === 'revision' ? 'selected' : '' }}>⟳ Revisi</option>
+                                                <option value="rejected" {{ $document->status === 'rejected' ? 'selected' : '' }}>✕ Tolak</option>
+                                            </select>
+                                        </div>
+                                        <div class="sm:col-span-4">
+                                            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Catatan (Opsional)</label>
+                                            <input type="text" name="documents[{{ $document->id }}][feedback]" placeholder="Masukkan catatan..." 
+                                                value="{{ $document->feedback }}"
+                                                class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs" data-group="{{ $groupSlug }}">
+                                        </div>
                                     </div>
                                 </div>
-                            </form>
-                        </div>
-                    @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Save Button for Section -->
+                    <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-t-2 border-green-200 flex justify-end">
+                        <button type="button" onclick="submitGroupForm('{{ $groupSlug }}')" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-2.5 px-6 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Simpan {{ $groupName }}</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            @endif
-        @endforeach
+                @endif
+            @endforeach
+        </div>
+    </form>
 
         <!-- Check for documents not in any group -->
         @php
@@ -301,19 +298,51 @@
             </div>
             <div class="divide-y divide-gray-200">
                 @foreach($ungroupedDocuments as $document)
-                    <div class="p-6 hover:bg-gray-50 transition">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-semibold text-gray-900 mb-2">{{ $document->type }}</h4>
-                                <p class="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-5 hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0">
+                        <!-- Header: Title, Filename, and Status Badge -->
+                        <div class="flex items-center justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-gray-900 mb-0.5 truncate">{{ $document->type }}</h4>
+                                <p class="text-xs text-gray-600 flex items-center gap-1 truncate">
+                                    <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
-                                    {{ $document->name }}
+                                    <span class="truncate">{{ $document->name }}</span>
                                 </p>
-                                
-                                <!-- Document Info Grid -->
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                            </div>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 whitespace-nowrap status-badge-{{ $document->id }}"
+                                @switch($document->status)
+                                    @case('pending')
+                                        style="background-color: #f3f4f6; color: #4b5563;"
+                                        @break
+                                    @case('approved')
+                                        style="background-color: #dcfce7; color: #166534;"
+                                        @break
+                                    @case('revision')
+                                        style="background-color: #fef3c7; color: #92400e;"
+                                        @break
+                                    @case('rejected')
+                                        style="background-color: #fee2e2; color: #991b1b;"
+                                        @break
+                                @endswitch
+                            >
+                                <span class="status-text-{{ $document->id }}">{{ ucfirst($document->status) }}</span>
+                            </span>
+                        </div>
+
+                        <!-- Metadata Row -->
+                        <div class="flex items-center justify-between gap-3 mb-3 text-xs">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1 text-gray-600">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>{{ $document->created_at->format('d M Y') }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ route('admin.download-document', $document) }}" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 whitespace-nowrap">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download
+                            </a>
+                        </div>
                                     <div>
                                         <p class="text-xs text-gray-500">Diupload</p>
                                         <p class="font-medium text-gray-900">{{ $document->created_at->format('d M Y H:i') }}</p>
@@ -324,7 +353,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs text-gray-500">Status</p>
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1"
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1 status-badge-{{ $document->id }}"
                                             @switch($document->status)
                                                 @case('pending')
                                                     style="background-color: #f3f4f6; color: #4b5563;"
@@ -340,7 +369,7 @@
                                                     @break
                                             @endswitch
                                         >
-                                            {{ ucfirst($document->status) }}
+                                            <span class="status-text-{{ $document->id }}">{{ ucfirst($document->status) }}</span>
                                         </span>
                                     </div>
                                     <div>
@@ -357,49 +386,49 @@
 
                         <!-- Feedback Section -->
                         @if($document->feedback)
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-r">
-                            <p class="text-sm font-semibold text-yellow-900 mb-1 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 px-3 py-2 mb-3 rounded-r text-sm">
+                            <p class="text-xs font-semibold text-yellow-900 mb-1 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
-                                Feedback Admin:
+                                Feedback:
                             </p>
-                            <p class="text-sm text-yellow-800">{{ $document->feedback }}</p>
+                            <p class="text-xs text-yellow-800">{{ $document->feedback }}</p>
                         </div>
-                    @endif
+                        @endif
 
-                    <!-- Update Status Form -->
-                    <form action="{{ route('admin.update-document-status', $document) }}" method="POST" class="mt-4 bg-gray-50 p-4 rounded-lg">
-                        @csrf
-                        @method('PATCH')
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Ubah Status</label>
-                                <select name="status" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                    <option value="">Pilih Status</option>
-                                    <option value="approved" {{ $document->status === 'approved' ? 'selected' : '' }}>Disetujui</option>
-                                    <option value="revision" {{ $document->status === 'revision' ? 'selected' : '' }}>Perlu Revisi</option>
-                                    <option value="rejected" {{ $document->status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                        <!-- Update Status Form -->
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3.5 rounded-lg border border-gray-200">
+                            <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 items-end">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Status</label>
+                                    <select name="documents[{{ $document->id }}][status]" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs doc-status" data-doc-id="{{ $document->id }}" data-group="dokumen-lainnya">
+                                        <option value="">Pilih</option>
+                                        <option value="approved" {{ $document->status === 'approved' ? 'selected' : '' }}>✓ Setujui</option>
+                                        <option value="revision" {{ $document->status === 'revision' ? 'selected' : '' }}>⟳ Revisi</option>
+                                        <option value="rejected" {{ $document->status === 'rejected' ? 'selected' : '' }}>✕ Tolak</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan/Feedback</label>
-                                    <input type="text" name="feedback" placeholder="Catatan untuk mahasiswa..." 
+                                <div class="sm:col-span-4">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Catatan (Opsional)</label>
+                                    <input type="text" name="documents[{{ $document->id }}][feedback]" placeholder="Masukkan catatan..." 
                                         value="{{ $document->feedback }}"
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-sm hover:shadow">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Simpan Status
-                                    </button>
+                                        class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-xs" data-group="dokumen-lainnya">
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 @endforeach
+            </div>
+            
+            <!-- Save Button for Section -->
+            <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-t-2 border-green-200 flex justify-end">
+                <button type="button" onclick="submitGroupForm('dokumen-lainnya')" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-2.5 px-6 rounded-lg transition shadow-md hover:shadow-lg inline-flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>Simpan Dokumen Lainnya</span>
+                </button>
             </div>
         </div>
         @endif
@@ -461,6 +490,101 @@
             setTimeout(() => {
                 selectedContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+        }
+    }
+
+    function submitGroupForm(groupSlug) {
+        // Get all inputs related to this group
+        const groupInputs = document.querySelectorAll(`[data-group="${groupSlug}"]`);
+        
+        console.log('Group slug:', groupSlug);
+        console.log('Found inputs:', groupInputs.length);
+        
+        if (groupInputs.length === 0) {
+            alert('Tidak ada perubahan untuk disimpan.');
+            return;
+        }
+
+        // Check if any status changes were made
+        let hasChanges = false;
+        const documentsMap = {};
+        
+        groupInputs.forEach((input, idx) => {
+            const inputName = input.name || '';
+            const nameMatch = inputName.match(/documents\[(\d+)\]\[(\w+)\]/);
+            
+            if (nameMatch) {
+                const docId = nameMatch[1];
+                const fieldName = nameMatch[2];
+                
+                if (!documentsMap[docId]) {
+                    documentsMap[docId] = {};
+                }
+                documentsMap[docId][fieldName] = input.value;
+                
+                console.log(`Input ${idx}:`, inputName, '=', input.value, '(docId:', docId, ', field:', fieldName, ')');
+                
+                if (fieldName === 'status' && input.value) {
+                    hasChanges = true;
+                }
+            } else {
+                console.warn(`Input ${idx} does not match pattern:`, inputName);
+            }
+        });
+
+        console.log('Documents map:', documentsMap);
+        console.log('Has changes:', hasChanges);
+
+        if (!hasChanges) {
+            alert('Silakan pilih status untuk setidaknya satu dokumen.');
+            return;
+        }
+
+        // Show confirmation dialog
+        if (confirm('Apakah Anda yakin ingin menyimpan perubahan untuk section ini?')) {
+            // Submit the main form with AJAX or just submit normally
+            const form = document.getElementById('batchUpdateForm');
+            
+            // Create a temporary form to submit only this group's data
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = form.action;
+            
+            // Add CSRF token
+            const csrfToken = document.querySelector('input[name="_token"]');
+            if (csrfToken) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = csrfToken.value;
+                tempForm.appendChild(tokenInput);
+            }
+            
+            // Add method
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'PATCH';
+            tempForm.appendChild(methodInput);
+            
+            // Add only this group's inputs properly
+            Object.keys(documentsMap).forEach(docId => {
+                Object.keys(documentsMap[docId]).forEach(fieldName => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `documents[${docId}][${fieldName}]`;
+                    input.value = documentsMap[docId][fieldName];
+                    tempForm.appendChild(input);
+                    console.log('Adding to form:', input.name, '=', input.value);
+                });
+            });
+            
+            console.log('Form action:', tempForm.action);
+            console.log('Form will submit now...');
+            
+            document.body.appendChild(tempForm);
+            tempForm.submit();
+            document.body.removeChild(tempForm);
         }
     }
 

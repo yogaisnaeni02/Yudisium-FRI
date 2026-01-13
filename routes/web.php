@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/verifikasi-pengajuan', [AdminController::class, 'verifikasiPengajuan'])->name('verifikasi-pengajuan');
     Route::get('/submission/{submission}', [AdminController::class, 'viewSubmission'])->name('submission-detail');
     Route::patch('/document/{document}/status', [AdminController::class, 'updateDocumentStatus'])->name('update-document-status');
+    Route::patch('/submission/{submission}/batch-update', [AdminController::class, 'batchUpdateDocuments'])->name('batch-update-documents');
     Route::get('/document/{document}/download', [AdminController::class, 'downloadDocument'])->name('download-document');
     
     // User Management
