@@ -111,12 +111,17 @@ class StudentController extends Controller
                 \Log::info('Processing typeSlug: ' . $typeSlug, [
                     'files_type' => gettype($files),
                     'files_count' => is_array($files) ? count($files) : (is_object($files) ? 'object' : 'not_array'),
-                    'files_value' => is_array($files) ? 'array' : (is_object($files) ? get_class($files) : $files)
+                    'files_value' => is_array($files) ? 'array' : (is_object($files) ? get_class($files) : $files),
+                    'valid_keys' => array_keys($validDocumentTypes),
+                    'is_in_valid' => isset($validDocumentTypes[$typeSlug])
                 ]);
 
                 // Skip if this typeSlug is not in our valid list
                 if (!isset($validDocumentTypes[$typeSlug])) {
-                    \Log::warning('Invalid document type slug received', ['typeSlug' => $typeSlug]);
+                    \Log::warning('Invalid document type slug received', [
+                        'typeSlug' => $typeSlug,
+                        'valid_types' => array_keys($validDocumentTypes)
+                    ]);
                     $skippedCount++;
                     continue;
                 }
