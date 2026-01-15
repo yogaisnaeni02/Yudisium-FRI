@@ -16,6 +16,11 @@ class Periode extends Model
         'status',
     ];
 
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+    ];
+
     public function yudisiumSidings()
     {
         return $this->hasMany(YudisiumSiding::class);

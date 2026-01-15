@@ -1,1 +1,1 @@
-<li><a href="/admin/add-periode">Add Periode</a></li>
+<li><a href="{{ route('admin.periodes') }}">Manajemen Periode</a></li>

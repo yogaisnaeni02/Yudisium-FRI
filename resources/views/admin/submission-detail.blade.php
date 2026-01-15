@@ -91,6 +91,51 @@
         </div>
     </div>
 
+    <!-- Periode & Verifikasi Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition w-full">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">PERIODE & VERIFIKASI</h3>
+        <form action="{{ route('admin.update-verification', $submission) }}" method="POST" class="space-y-4">
+            @csrf
+            @method('PATCH')
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Periode Selection -->
+                <div>
+                    <label for="periode_id" class="block text-sm font-semibold text-gray-700 mb-2">Periode Yudisium</label>
+                    <select id="periode_id" name="periode_id" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                        <option value="">Pilih Periode...</option>
+                        @foreach(\App\Models\Periode::orderBy('tanggal_mulai', 'desc')->get() as $periode)
+                            <option value="{{ $periode->id }}" {{ $submission->periode_id === $periode->id ? 'selected' : '' }}>
+                                {{ $periode->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Predikat Selection -->
+                <div>
+                    <label for="predikat" class="block text-sm font-semibold text-gray-700 mb-2">Predikat Kelulusan</label>
+                    <select id="predikat" name="predikat" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+                        <option value="">Tanpa Predikat</option>
+                        <option value="memuaskan" {{ isset($yudisiumResult) && $yudisiumResult->predikat_kelulusan === 'memuaskan' ? 'selected' : '' }}>Memuaskan</option>
+                        <option value="sangat_memuaskan" {{ isset($yudisiumResult) && $yudisiumResult->predikat_kelulusan === 'sangat_memuaskan' ? 'selected' : '' }}>Sangat Memuaskan</option>
+                        <option value="cumlaude" {{ isset($yudisiumResult) && $yudisiumResult->predikat_kelulusan === 'cumlaude' ? 'selected' : '' }}>Dengan Pujian (Cumlaude)</option>
+                        <option value="summa_cumlaude" {{ isset($yudisiumResult) && $yudisiumResult->predikat_kelulusan === 'summa_cumlaude' ? 'selected' : '' }}>Sempurna (Summa Cumlaude)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition shadow-sm hover:shadow flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Simpan Periode & Predikat
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Dokumen List - Grouped -->
     @php
         $groups = [

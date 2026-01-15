@@ -7,6 +7,7 @@ use App\Models\Submission;
 use App\Models\Document;
 use App\Models\User;
 use App\Models\Article;
+use App\Models\Periode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -72,7 +73,7 @@ class AdminController extends Controller
         $sort = $request->get('sort', 'asc'); // 'asc' or 'desc'
 
         // Base query
-        $query = Submission::with('student.user', 'documents');
+        $query = Submission::with('student.user', 'documents', 'periode');
 
         // Search functionality
         if ($search) {
@@ -127,11 +128,46 @@ class AdminController extends Controller
      */
     public function viewSubmission(Submission $submission): View
     {
-        $submission->load('student.user', 'documents');
+        $submission->load('student.user', 'documents', 'periode');
+        $yudisiumResult = $submission->student->yudisiumResults()->latest()->first();
 
         return view('admin.submission-detail', [
             'submission' => $submission,
+            'yudisiumResult' => $yudisiumResult,
         ]);
+    }
+
+    /**
+     * Update verification (periode and predikat).
+     */
+    public function updateVerification(Request $request, Submission $submission)
+    {
+        $request->validate([
+            'periode_id' => 'nullable|exists:periodes,id',
+            'predikat' => 'nullable|in:memuaskan,sangat_memuaskan,cumlaude,summa_cumlaude',
+        ]);
+
+        // Update periode in submission
+        $submission->update(['periode_id' => $request->periode_id]);
+
+        // Update predikat in yudisium result if it exists
+        if ($request->predikat) {
+            $yudisiumResult = $submission->student->yudisiumResults()->latest()->first();
+            if ($yudisiumResult) {
+                $yudisiumResult->update(['predikat_kelulusan' => $request->predikat]);
+            } else {
+                // Create new yudisium result if none exists
+                \App\Models\YudisiumResult::create([
+                    'student_id' => $submission->student->id,
+                    'ipk' => $submission->student->ipk,
+                    'predikat_kelulusan' => $request->predikat,
+                ]);
+            }
+        }
+
+        \App\Models\Activity::log('verify', 'Update periode dan predikat pengajuan', 'Submission', $submission->id);
+
+        return redirect()->back()->with('success', 'Periode dan predikat berhasil diperbarui!');
     }
 
     /**
@@ -716,5 +752,101 @@ class AdminController extends Controller
 
         return redirect()->route('admin.articles')
             ->with('success', 'Informasi berhasil dihapus!');
+    }
+
+    /**
+     * Display periode management page.
+     */
+    public function periodes(): View
+    {
+        $periodes = Periode::orderBy('tanggal_mulai', 'desc')->paginate(15);
+        
+        return view('admin.periodes', [
+            'periodes' => $periodes,
+        ]);
+    }
+
+    /**
+     * Show create periode form.
+     */
+    public function createPeriode(): View
+    {
+        return view('admin.create-periode');
+    }
+
+    /**
+     * Store new periode.
+     */
+    public function storePeriode(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255|unique:periodes,nama',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $periode = Periode::create([
+            'nama' => $request->nama,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'status' => $request->status,
+        ]);
+
+        \App\Models\Activity::log('create_periode', 'Membuat periode: ' . $periode->nama, 'Periode', $periode->id);
+
+        return redirect()->route('admin.periodes')
+            ->with('success', 'Periode berhasil dibuat!');
+    }
+
+    /**
+     * Show edit periode form.
+     */
+    public function editPeriode(Periode $periode): View
+    {
+        return view('admin.edit-periode', [
+            'periode' => $periode,
+        ]);
+    }
+
+    /**
+     * Update periode.
+     */
+    public function updatePeriode(Request $request, Periode $periode)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255|unique:periodes,nama,' . $periode->id,
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $periode->update([
+            'nama' => $request->nama,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'status' => $request->status,
+        ]);
+
+        \App\Models\Activity::log('update_periode', 'Mengupdate periode: ' . $periode->nama, 'Periode', $periode->id);
+
+        return redirect()->route('admin.periodes')
+            ->with('success', 'Periode berhasil diperbarui!');
+    }
+
+    /**
+     * Delete periode.
+     */
+    public function deletePeriode(Periode $periode)
+    {
+        $periodeName = $periode->nama;
+        $periodeId = $periode->id;
+        
+        \App\Models\Activity::log('delete_periode', 'Menghapus periode: ' . $periodeName, 'Periode', $periodeId);
+        
+        $periode->delete();
+
+        return redirect()->route('admin.periodes')
+            ->with('success', 'Periode berhasil dihapus!');
     }
 }

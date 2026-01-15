@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/verifikasi-pengajuan', [AdminController::class, 'verifikasiPengajuan'])->name('verifikasi-pengajuan');
     Route::get('/submission/{submission}', [AdminController::class, 'viewSubmission'])->name('submission-detail');
+    Route::patch('/submission/{submission}/verification', [AdminController::class, 'updateVerification'])->name('update-verification');
     Route::patch('/document/{document}/status', [AdminController::class, 'updateDocumentStatus'])->name('update-document-status');
     Route::patch('/submission/{submission}/batch-update', [AdminController::class, 'batchUpdateDocuments'])->name('batch-update-documents');
     Route::get('/document/{document}/download', [AdminController::class, 'downloadDocument'])->name('download-document');
@@ -52,6 +53,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/articles/{article}/edit', [AdminController::class, 'editArticle'])->name('articles.edit');
     Route::put('/articles/{article}', [AdminController::class, 'updateArticle'])->name('articles.update');
     Route::delete('/articles/{article}', [AdminController::class, 'deleteArticle'])->name('articles.delete');
+
+    // Periode Management
+    Route::get('/periodes', [AdminController::class, 'periodes'])->name('periodes');
+    Route::get('/periodes/create', [AdminController::class, 'createPeriode'])->name('periodes.create');
+    Route::post('/periodes', [AdminController::class, 'storePeriode'])->name('periodes.store');
+    Route::get('/periodes/{periode}/edit', [AdminController::class, 'editPeriode'])->name('periodes.edit');
+    Route::put('/periodes/{periode}', [AdminController::class, 'updatePeriode'])->name('periodes.update');
+    Route::delete('/periodes/{periode}', [AdminController::class, 'deletePeriode'])->name('periodes.delete');
 });
 
 Route::middleware('auth')->group(function () {
