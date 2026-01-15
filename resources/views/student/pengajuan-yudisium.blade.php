@@ -114,107 +114,7 @@
                                     @csrf
                                     <input type="hidden" name="group_name" value="{{ $groupName }}">
 
-                                    <!-- Currently Uploaded Files Section -->
-                                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                        <p class="text-sm font-semibold text-blue-900 mb-4 flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                                            </svg>
-                                            Berkas yang Sudah Diunggah
-                                        </p>
-                                        <div class="space-y-3">
-                                            @php $hasUploaded = false; $allDisabled = true; $hasRejected = false; @endphp
-                                            @foreach($docs as $type)
-                                                @php
-                                                    $slug = \Illuminate\Support\Str::slug($type);
-                                                    $doc = $documents->where('type', $type)->first();
-                                                    if ($doc) $hasUploaded = true;
-                                                    if ($doc && $doc->status === 'rejected') $hasRejected = true;
-                                                @endphp
-                                            @endforeach
-                                            @foreach($docs as $type)
-                                                @php
-                                                    $slug = \Illuminate\Support\Str::slug($type);
-                                                    $doc = $documents->where('type', $type)->first();
-                                                    // determine if this document's upload should be disabled (pending, approved, or if there's any rejected doc and this isn't rejected)
-                                                    $isDisabled = $doc && ($doc->status === 'pending' || $doc->status === 'approved' || ($hasRejected && $doc->status !== 'rejected'));
-                                                    if (!$isDisabled) { $allDisabled = false; }
-                                                @endphp
-                                                @if($doc)
-                                                    <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                                                        <div class="flex-1">
-                                                            <p class="text-sm font-medium text-gray-900">{{ $type }}</p>
-                                                            <p class="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                </svg>
-                                                                {{ $doc->name }}
-                                                            </p>
-                                                            <div class="flex items-center gap-3 mt-2">
-                                                                <span class="text-xs px-2 py-1 rounded"
-                                                                    @switch($doc->status)
-                                                                        @case('approved') style="background-color: #dcfce7; color: #15803d;" @break
-                                                                        @case('pending') style="background-color: #f3f4f6; color: #374151;" @break
-                                                                        @case('revision') style="background-color: #fef3c7; color: #92400e;" @break
-                                                                        @case('rejected') style="background-color: #fee2e2; color: #b91c1c;" @break
-                                                                    @endswitch
-                                                                >
-                                                                    @switch($doc->status)
-                                                                        @case('approved') 
-                                                                            <span class="flex items-center gap-1">
-                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                                                </svg>
-                                                                                Disetujui
-                                                                            </span>
-                                                                            @break
-                                                                        @case('pending') 
-                                                                            <span class="flex items-center gap-1">
-                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                                                </svg>
-                                                                                Menunggu Review
-                                                                            </span>
-                                                                            @break
-                                                                        @case('revision') 
-                                                                            <span class="flex items-center gap-1">
-                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                                                                </svg>
-                                                                                Perlu Revisi
-                                                                            </span>
-                                                                            @break
-                                                                        @case('rejected') 
-                                                                            <span class="flex items-center gap-1">
-                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                                                </svg>
-                                                                                Ditolak
-                                                                            </span>
-                                                                            @break
-                                                                    @endswitch
-                                                                </span>
-                                                                <span class="text-xs text-gray-500">Diupload: {{ $doc->created_at->format('d M Y H:i') }}</span>
-                                                            </div>
-                                                        </div>
-                                                        @if($submission->status === 'draft' && $doc->status === 'rejected')
-                                                            <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" class="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded hover:bg-blue-100 flex items-center gap-1">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                                </svg>
-                                                                Ganti
-                                                            </button>
-                                                        @endif
-                                                    </div>
-                                                @endif
-                                            @endforeach
-                                            @if(!$hasUploaded)
-                                                <p class="text-sm text-gray-600 italic">Belum ada berkas yang diunggah untuk seksi ini</p>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <!-- Upload/Replace Files Section -->
+                                    <!-- Combined Upload Section with Status -->
                                     <div>
                                         <p class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,10 +123,13 @@
                                             Unggah atau Ganti Berkas
                                         </p>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            @php $allDisabled = true; @endphp
                                             @foreach($docs as $type)
-                                                @php 
-                                                    $slug = \Illuminate\Support\Str::slug($type); 
+                                                @php
+                                                    $slug = \Illuminate\Support\Str::slug($type);
                                                     $doc = $documents->where('type', $type)->first();
+                                                    $inputDisabled = $doc && ($doc->status === 'pending' || $doc->status === 'approved');
+                                                    if (!$inputDisabled) { $allDisabled = false; }
                                                 @endphp
                                                 <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
                                                     <div class="flex items-center justify-between mb-3">
@@ -237,10 +140,70 @@
                                                             </button>
                                                         @endif
                                                     </div>
+
+                                                    <!-- Show uploaded document status if exists -->
+                                                    @if($doc)
+                                                        <div class="mb-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                            <div class="flex items-center justify-between">
+                                                                <div class="flex items-center gap-2">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                    </svg>
+                                                                    <div>
+                                                                        <p class="text-xs font-medium text-gray-900">{{ $doc->name }}</p>
+                                                                        <p class="text-xs text-gray-500">Diupload: {{ $doc->created_at->format('d M Y H:i') }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <span class="text-xs px-2 py-1 rounded"
+                                                                    @switch($doc->status)
+                                                                        @case('approved') style="background-color: #dcfce7; color: #15803d;" @break
+                                                                        @case('pending') style="background-color: #f3f4f6; color: #374151;" @break
+                                                                        @case('revision') style="background-color: #fef3c7; color: #92400e;" @break
+                                                                        @case('rejected') style="background-color: #fee2e2; color: #b91c1c;" @break
+                                                                    @endswitch
+                                                                >
+                                                                    @switch($doc->status)
+                                                                        @case('approved')
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                                </svg>
+                                                                                Disetujui
+                                                                            </span>
+                                                                            @break
+                                                                        @case('pending')
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                                </svg>
+                                                                                Menunggu Review
+                                                                            </span>
+                                                                            @break
+                                                                        @case('revision')
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                                </svg>
+                                                                                Perlu Revisi
+                                                                            </span>
+                                                                            @break
+                                                                        @case('rejected')
+                                                                            <span class="flex items-center gap-1">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                                Ditolak
+                                                                            </span>
+                                                                            @break
+                                                                    @endswitch
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
                                                     <p class="text-xs text-gray-500 mb-3">Format: PDF/DOC/DOCX | Maks. 5MB per file</p>
-                                                    
+
                                                     <!-- Hidden by default if document exists and not replacing -->
-                                                    @php $inputDisabled = $doc && ($doc->status === 'pending' || $doc->status === 'approved' || ($hasRejected && $doc->status !== 'rejected')); @endphp
                                                     <div id="upload-form-{{ $slug }}" style="display: {{ ($doc && $submission->status === 'draft' && $doc->status === 'rejected') ? 'none' : 'block' }};">
                                                         <label class="block text-xs font-medium text-gray-700 mb-2">Pilih File (boleh banyak)</label>
                                                         <input type="file" name="files[{{ $slug }}][]" multiple accept=".pdf,.doc,.docx" class="w-full text-sm text-gray-700" onchange="validateAndPreviewFiles(this, '{{ $slug }}')" @if($inputDisabled) disabled @endif>
@@ -250,9 +213,6 @@
                                                             <ul class="file-list-{{ $slug }} space-y-1 text-xs"></ul>
                                                             <div class="file-warnings-{{ $slug }} mt-2 space-y-1"></div>
                                                         </div>
-                                                        @if(!$inputDisabled)
-                                                            <button type="button" onclick="uploadSingleDocument(event, '{{ $slug }}', '{{ $groupSlug }}')" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-3 rounded">Unggah {{ $type }}</button>
-                                                        @endif
                                                     </div>
 
                                                     <!-- Replace form (shown by default for rejected) -->
@@ -265,15 +225,7 @@
                                                                 <ul class="file-list-{{ $slug }} space-y-1 text-xs"></ul>
                                                                 <div class="file-warnings-{{ $slug }} mt-2 space-y-1"></div>
                                                             </div>
-                                                            <div class="flex gap-2">
-                                                                <button type="button" onclick="uploadSingleDocument(event, '{{ $slug }}', '{{ $groupSlug }}')" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-3 rounded">Unggah Ganti</button>
-                                                                <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" class="text-xs text-gray-600 hover:text-gray-800">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                                    </svg>
-                                                                    Batal
-                                                                </button>
-                                                            </div>
+                                                            <p class="text-xs text-gray-600 mt-2">Upload bersama file lain menggunakan tombol di bawah</p>
                                                         </div>
                                                     @endif
                                                 </div>
@@ -432,8 +384,15 @@
             body: formData,
             headers: { 'Accept': 'application/json' }
         })
-        .then(res => res.json())
+        .then(res => {
+            console.log('Response status:', res.status);
+            if (!res.ok && res.status !== 422) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-green-50 border border-green-200 rounded-lg';
@@ -480,41 +439,57 @@
             totalFiles += input.files.length;
         });
 
+        console.log('Starting upload for group:', groupSlug);
+        console.log('Total files found:', totalFiles);
+
         if (totalFiles === 0) {
             alert('Pilih minimal 1 file untuk diunggah');
             return;
         }
 
         const formData = new FormData(form);
+        console.log('FormData entries:');
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, ': File -', value.name, '(', value.size, 'bytes)');
+            } else {
+                console.log(key, ':', value);
+            }
+        }
+
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Mengunggah...';
+
+        console.log('Sending request to:', '{{ route("student.upload-document") }}');
 
         fetch('{{ route("student.upload-document") }}', {
             method: 'POST',
             body: formData,
             headers: { 'Accept': 'application/json' }
         })
-        .then(res => res.json())
+        .then(res => {
+            console.log('Response status:', res.status);
+            console.log('Response headers:', res.headers);
+            if (!res.ok && res.status !== 422) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-green-50 border border-green-200 rounded-lg';
                 const count = data.documents ? data.documents.length : 0;
-                alert.innerHTML = `<p class="text-green-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><strong>Sukses!</strong> ${count} file berhasil diunggah.</p>`;
+                alert.innerHTML = `<p class="text-green-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><strong>Sukses!</strong> ${count} file berhasil diunggah. Halaman akan dimuat ulang...</p>`;
                 form.parentNode.insertBefore(alert, form);
-                setTimeout(() => alert.remove(), 4000);
-                form.reset();
 
-                // Reset previews
-                fileInputs.forEach(input => {
-                    const slug = input.name.match(/files\[(.*?)\]/)?.[1];
-                    if (slug) {
-                        const previewDiv = document.querySelector(`.file-preview-${slug}`);
-                        if (previewDiv) previewDiv.style.display = 'none';
-                    }
-                });
+                console.log('Upload successful, reloading page...');
+
+                // Force reload from server to avoid cache issues
+                window.location.reload(true);
             } else {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
@@ -524,6 +499,7 @@
             }
         })
         .catch(err => {
+            console.error('Upload error:', err);
             const alert = document.createElement('div');
             alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';
             alert.innerHTML = `<p class="text-red-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><strong>Error:</strong> ${err.message}</p>`;

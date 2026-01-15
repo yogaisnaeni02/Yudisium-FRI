@@ -242,6 +242,17 @@ class AdminController extends Controller
      */
     public function downloadDocument(Document $document)
     {
+        // If file content exists in database, serve from there
+        if ($document->file_content) {
+            $fileContent = base64_decode($document->file_content);
+            $filename = $document->original_filename ?: $document->name;
+
+            return response($fileContent)
+                ->header('Content-Type', $document->mime_type ?: 'application/octet-stream')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        }
+
+        // Fallback to filesystem if file_content is not available
         return \Storage::download($document->file_path, $document->name);
     }
 
