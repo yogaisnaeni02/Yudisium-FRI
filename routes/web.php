@@ -61,6 +61,15 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/periodes/{periode}/edit', [AdminController::class, 'editPeriode'])->name('periodes.edit');
     Route::put('/periodes/{periode}', [AdminController::class, 'updatePeriode'])->name('periodes.update');
     Route::delete('/periodes/{periode}', [AdminController::class, 'deletePeriode'])->name('periodes.delete');
+
+    // Yudisium Siding Management
+    Route::get('/yudisium-sidings', [AdminController::class, 'yudisiumSidings'])->name('yudisium-sidings');
+    Route::get('/yudisium-sidings/create', [AdminController::class, 'createYudisiumSiding'])->name('yudisium-sidings.create');
+    Route::post('/yudisium-sidings', [AdminController::class, 'storeYudisiumSiding'])->name('yudisium-sidings.store');
+    Route::get('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'showYudisiumSiding'])->name('yudisium-sidings.show');
+    Route::get('/yudisium-sidings/{yudisiumSiding}/edit', [AdminController::class, 'editYudisiumSiding'])->name('yudisium-sidings.edit');
+    Route::patch('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'updateYudisiumSiding'])->name('yudisium-sidings.update');
+    Route::delete('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'deleteYudisiumSiding'])->name('yudisium-sidings.delete');
 });
 
 Route::middleware('auth')->group(function () {
