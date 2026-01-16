@@ -45,4 +45,12 @@ class Student extends Model
     {
         return $this->hasMany(YudisiumResult::class);
     }
+
+    /**
+     * Get the yudisium sidings for the student.
+     */
+    public function yudisiumSidings(): HasMany
+    {
+        return $this->hasMany(YudisiumSiding::class);
+    }
 }

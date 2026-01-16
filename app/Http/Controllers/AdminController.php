@@ -8,8 +8,10 @@ use App\Models\Document;
 use App\Models\User;
 use App\Models\Article;
 use App\Models\Periode;
+use App\Models\YudisiumSiding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -103,6 +105,13 @@ class AdminController extends Controller
             }
         });
 
+        // For completed submissions, check and auto-create yudisium_siding if conditions are met
+        if ($viewType === 'completed') {
+            foreach ($filteredSubmissions as $submission) {
+                $this->autoCreateYudisiumSiding($submission);
+            }
+        }
+
         // Paginate manually
         $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
         $perPage = 15;
@@ -147,8 +156,10 @@ class AdminController extends Controller
             'predikat' => 'nullable|in:memuaskan,sangat_memuaskan,cumlaude,summa_cumlaude',
         ]);
 
-        // Update periode in submission
-        $submission->update(['periode_id' => $request->periode_id]);
+        // Update periode in submission (only if provided)
+        if ($request->periode_id) {
+            $submission->update(['periode_id' => $request->periode_id]);
+        }
 
         // Update predikat in yudisium result if it exists
         if ($request->predikat) {
@@ -166,6 +177,12 @@ class AdminController extends Controller
         }
 
         \App\Models\Activity::log('verify', 'Update periode dan predikat pengajuan', 'Submission', $submission->id);
+
+        // Refresh submission to get latest data
+        $submission->refresh();
+        
+        // Auto-create yudisium siding if conditions are met
+        $this->autoCreateYudisiumSiding($submission);
 
         return redirect()->back()->with('success', 'Periode dan predikat berhasil diperbarui!');
     }
@@ -196,6 +213,9 @@ class AdminController extends Controller
         if ($allApproved && $submission->documents()->count() > 0) {
             $submission->update(['status' => 'approved']);
             \App\Models\Activity::log('approve', 'Semua dokumen disetujui, pengajuan diterima', 'Submission', $submission->id);
+            
+            // Auto-create yudisium siding if conditions are met
+            $this->autoCreateYudisiumSiding($submission);
         } elseif (in_array($submission->status, ['draft', 'submitted'])) {
             $submission->update(['status' => 'under_review']);
         }
@@ -265,6 +285,9 @@ class AdminController extends Controller
         if ($allApproved && $submission->documents()->count() > 0) {
             $submission->update(['status' => 'approved']);
             \App\Models\Activity::log('approve', 'Semua dokumen disetujui, pengajuan diterima', 'Submission', $submission->id);
+            
+            // Auto-create yudisium siding if conditions are met
+            $this->autoCreateYudisiumSiding($submission);
         } elseif (in_array($submission->status, ['draft', 'submitted'])) {
             $submission->update(['status' => 'under_review']);
         }
@@ -848,5 +871,388 @@ class AdminController extends Controller
 
         return redirect()->route('admin.periodes')
             ->with('success', 'Periode berhasil dihapus!');
+    }
+
+    // ==================== YUDISIUM SIDING METHODS ====================
+
+    /**
+     * Get the correct student foreign key column name.
+     */
+    private function getStudentForeignKeyColumn(): string
+    {
+        static $columnName = null;
+        if ($columnName === null) {
+            try {
+                $columns = Schema::getColumnListing('yudisium_sidings');
+                $columnName = in_array('student_id', $columns) ? 'student_id' : 'mahasiswa_id';
+            } catch (\Exception $e) {
+                $columnName = 'mahasiswa_id'; // Default fallback
+            }
+        }
+        return $columnName;
+    }
+
+    /**
+     * Auto-create yudisium siding when all conditions are met:
+     * 1. Submission status is 'approved'
+     * 2. All documents are approved
+     * 3. Submission has periode_id
+     * 4. Student has predikat in YudisiumResult
+     */
+    private function autoCreateYudisiumSiding(Submission $submission): void
+    {
+        // Check if submission status is approved
+        if ($submission->status !== 'approved') {
+            return; // Submission not approved yet
+        }
+
+        // Check if all documents are approved
+        $allApproved = $submission->documents()
+            ->where('status', '!=', 'approved')
+            ->doesntExist();
+
+        if (!$allApproved || $submission->documents()->count() === 0) {
+            return; // Not all documents approved or no documents
+        }
+
+        // Check if submission has periode_id
+        if (!$submission->periode_id) {
+            return; // No periode assigned
+        }
+
+        // Check if student has predikat in YudisiumResult
+        $yudisiumResult = $submission->student->yudisiumResults()->latest()->first();
+        if (!$yudisiumResult || !$yudisiumResult->predikat_kelulusan) {
+            return; // No predikat assigned
+        }
+
+        // Check if yudisium_siding already exists for this student and periode
+        $studentColumn = $this->getStudentForeignKeyColumn();
+        $existingSiding = YudisiumSiding::where($studentColumn, $submission->student_id)
+            ->where('periode_id', $submission->periode_id)
+            ->first();
+
+        if ($existingSiding) {
+            return; // Already exists
+        }
+
+        // Map predikat from YudisiumResult to predikat_yudisium format
+        $predikatMap = [
+            'memuaskan' => 'MEMUASKAN',
+            'sangat_memuaskan' => 'SANGAT MEMUASKAN',
+            'cumlaude' => 'CUMLAUDE',
+            'summa_cumlaude' => 'SUMMA CUMLAUDE',
+        ];
+
+        $predikatYudisium = $predikatMap[$yudisiumResult->predikat_kelulusan] ?? strtoupper($yudisiumResult->predikat_kelulusan);
+
+        // Determine status_cumlaude
+        $statusCumlaude = null;
+        if ($yudisiumResult->predikat_kelulusan === 'cumlaude') {
+            $statusCumlaude = 'cumlaude';
+        } elseif ($yudisiumResult->predikat_kelulusan === 'summa_cumlaude') {
+            $statusCumlaude = 'summa_cumlaude';
+        }
+
+        // Create yudisium_siding
+        // Support both student_id and mahasiswa_id
+        $yudisiumSidingData = [
+            'periode_id' => $submission->periode_id,
+            'tanggal_sidang' => now(),
+            'predikat' => $yudisiumResult->predikat_kelulusan, // Keep old field for compatibility
+        ];
+        
+        // Use the correct column name for student
+        $studentColumn = $this->getStudentForeignKeyColumn();
+        $yudisiumSidingData[$studentColumn] = $submission->student_id;
+        
+        // Check which columns exist before adding them
+        $columns = Schema::getColumnListing('yudisium_sidings');
+        
+        if (in_array('predikat_yudisium', $columns)) {
+            $yudisiumSidingData['predikat_yudisium'] = $predikatYudisium;
+        }
+        if (in_array('status_cumlaude', $columns)) {
+            $yudisiumSidingData['status_cumlaude'] = $statusCumlaude;
+        }
+        if (in_array('status_yudisium', $columns)) {
+            $yudisiumSidingData['status_yudisium'] = 'pending'; // Default status, admin can update later
+        }
+        
+        $yudisiumSiding = YudisiumSiding::create($yudisiumSidingData);
+
+        \App\Models\Activity::log('auto_create_yudisium_siding', 
+            'Auto-create sidang yudisium untuk mahasiswa: ' . $submission->student->nama . ' (Periode: ' . $submission->periode->nama . ')', 
+            'YudisiumSiding', 
+            $yudisiumSiding->id
+        );
+    }
+
+    /**
+     * Display list of yudisium sidings.
+     */
+    public function yudisiumSidings(Request $request): View
+    {
+        // Auto-create yudisium_siding for all eligible submissions
+        // Get all submissions that are completed (100% progress, all documents approved)
+        $completedSubmissions = Submission::with('student.user', 'documents', 'periode')
+            ->where('status', 'approved')
+            ->get()
+            ->filter(function($submission) {
+                $progress = $submission->getProgressPercentage();
+                return $progress === 100 && $submission->documents->count() > 0;
+            });
+
+        // Auto-create yudisium_siding for each eligible submission
+        foreach ($completedSubmissions as $submission) {
+            $this->autoCreateYudisiumSiding($submission);
+        }
+
+        $search = $request->get('search', '');
+        $periodeFilter = $request->get('periode', '');
+
+        $query = YudisiumSiding::with(['student.user', 'periode']);
+
+        // Search by student name or NIM
+        if ($search) {
+            $query->whereHas('student', function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nim', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by periode
+        if ($periodeFilter) {
+            $query->where('periode_id', $periodeFilter);
+        }
+
+        $sidings = $query->orderBy('tanggal_sidang', 'desc')
+            ->paginate(15);
+
+        $periodes = Periode::orderBy('nama', 'desc')->get();
+
+        return view('admin.yudisium-sidings.index', [
+            'sidings' => $sidings,
+            'periodes' => $periodes,
+            'search' => $search,
+            'periodeFilter' => $periodeFilter,
+        ]);
+    }
+
+    /**
+     * Show create yudisium siding form.
+     */
+    public function createYudisiumSiding(): View
+    {
+        $students = Student::with('user')->orderBy('nama')->get();
+        $periodes = Periode::where('status', 'active')->orderBy('nama', 'desc')->get();
+
+        return view('admin.yudisium-sidings.create', [
+            'students' => $students,
+            'periodes' => $periodes,
+        ]);
+    }
+
+    /**
+     * Store new yudisium siding.
+     */
+    public function storeYudisiumSiding(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'periode_id' => 'required|exists:periodes,id',
+            'tanggal_sidang' => 'required|date',
+            
+            // Dosen Wali
+            'dosen_wali_nama' => 'nullable|string|max:255',
+            'dosen_wali_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            
+            // Pembimbing 1
+            'pembimbing_1_nama' => 'nullable|string|max:255',
+            'pembimbing_1_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'pembimbing_1_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Pembimbing 2
+            'pembimbing_2_nama' => 'nullable|string|max:255',
+            'pembimbing_2_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Penguji Ketua
+            'penguji_ketua_nama' => 'nullable|string|max:255',
+            'penguji_ketua_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Penguji Anggota
+            'penguji_anggota_nama' => 'nullable|string|max:255',
+            'penguji_anggota_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Tugas Akhir
+            'judul_tugas_akhir' => 'nullable|string',
+            'jenis_tugas_akhir' => 'nullable|string|max:255',
+            
+            // Nilai
+            'nilai_total' => 'nullable|numeric|min:0|max:100',
+            'nilai_huruf' => 'nullable|string|max:10',
+            
+            // Status
+            'predikat_yudisium' => 'nullable|string|max:255',
+            'status_cumlaude' => 'nullable|in:cumlaude,summa_cumlaude,tidak',
+            'pemenuhan_jurnal' => 'nullable|string',
+            'status_yudisium' => 'required|in:lulus,tidak_lulus,pending',
+            'catatan' => 'nullable|string',
+        ]);
+
+        // Handle file uploads
+        if ($request->hasFile('dosen_wali_foto')) {
+            $validated['dosen_wali_foto'] = $request->file('dosen_wali_foto')->store('yudisium/dosen_wali', 'public');
+        }
+
+        if ($request->hasFile('pembimbing_1_foto')) {
+            $validated['pembimbing_1_foto'] = $request->file('pembimbing_1_foto')->store('yudisium/pembimbing', 'public');
+        }
+
+        $siding = YudisiumSiding::create($validated);
+
+        \App\Models\Activity::log('create_yudisium_siding', 
+            'Membuat data sidang yudisium untuk mahasiswa: ' . $siding->student->nama, 
+            'YudisiumSiding', 
+            $siding->id
+        );
+
+        return redirect()->route('admin.yudisium-sidings.show', $siding)
+            ->with('success', 'Data sidang yudisium berhasil dibuat!');
+    }
+
+    /**
+     * Show yudisium siding detail (view like the image).
+     */
+    public function showYudisiumSiding(YudisiumSiding $yudisiumSiding): View
+    {
+        $yudisiumSiding->load(['student.user', 'periode']);
+
+        return view('admin.yudisium-sidings.show', [
+            'siding' => $yudisiumSiding,
+        ]);
+    }
+
+    /**
+     * Show edit yudisium siding form.
+     */
+    public function editYudisiumSiding(YudisiumSiding $yudisiumSiding): View
+    {
+        $students = Student::with('user')->orderBy('nama')->get();
+        $periodes = Periode::where('status', 'active')->orderBy('nama', 'desc')->get();
+
+        return view('admin.yudisium-sidings.edit', [
+            'siding' => $yudisiumSiding,
+            'students' => $students,
+            'periodes' => $periodes,
+        ]);
+    }
+
+    /**
+     * Update yudisium siding.
+     */
+    public function updateYudisiumSiding(Request $request, YudisiumSiding $yudisiumSiding)
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'periode_id' => 'required|exists:periodes,id',
+            'tanggal_sidang' => 'required|date',
+            
+            // Dosen Wali
+            'dosen_wali_nama' => 'nullable|string|max:255',
+            'dosen_wali_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            
+            // Pembimbing 1
+            'pembimbing_1_nama' => 'nullable|string|max:255',
+            'pembimbing_1_foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'pembimbing_1_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Pembimbing 2
+            'pembimbing_2_nama' => 'nullable|string|max:255',
+            'pembimbing_2_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Penguji Ketua
+            'penguji_ketua_nama' => 'nullable|string|max:255',
+            'penguji_ketua_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Penguji Anggota
+            'penguji_anggota_nama' => 'nullable|string|max:255',
+            'penguji_anggota_nilai' => 'nullable|numeric|min:0|max:100',
+            
+            // Tugas Akhir
+            'judul_tugas_akhir' => 'nullable|string',
+            'jenis_tugas_akhir' => 'nullable|string|max:255',
+            
+            // Nilai
+            'nilai_total' => 'nullable|numeric|min:0|max:100',
+            'nilai_huruf' => 'nullable|string|max:10',
+            
+            // Status
+            'predikat_yudisium' => 'nullable|string|max:255',
+            'status_cumlaude' => 'nullable|in:cumlaude,summa_cumlaude,tidak',
+            'pemenuhan_jurnal' => 'nullable|string',
+            'status_yudisium' => 'required|in:lulus,tidak_lulus,pending',
+            'catatan' => 'nullable|string',
+        ]);
+
+        // Handle file uploads (only if new file is uploaded)
+        if ($request->hasFile('dosen_wali_foto')) {
+            // Delete old file if exists
+            if ($yudisiumSiding->dosen_wali_foto) {
+                Storage::disk('public')->delete($yudisiumSiding->dosen_wali_foto);
+            }
+            $validated['dosen_wali_foto'] = $request->file('dosen_wali_foto')->store('yudisium/dosen_wali', 'public');
+        } else {
+            unset($validated['dosen_wali_foto']);
+        }
+
+        if ($request->hasFile('pembimbing_1_foto')) {
+            // Delete old file if exists
+            if ($yudisiumSiding->pembimbing_1_foto) {
+                Storage::disk('public')->delete($yudisiumSiding->pembimbing_1_foto);
+            }
+            $validated['pembimbing_1_foto'] = $request->file('pembimbing_1_foto')->store('yudisium/pembimbing', 'public');
+        } else {
+            unset($validated['pembimbing_1_foto']);
+        }
+
+        $yudisiumSiding->update($validated);
+
+        \App\Models\Activity::log('update_yudisium_siding', 
+            'Mengupdate data sidang yudisium untuk mahasiswa: ' . $yudisiumSiding->student->nama, 
+            'YudisiumSiding', 
+            $yudisiumSiding->id
+        );
+
+        return redirect()->route('admin.yudisium-sidings.show', $yudisiumSiding)
+            ->with('success', 'Data sidang yudisium berhasil diperbarui!');
+    }
+
+    /**
+     * Delete yudisium siding.
+     */
+    public function deleteYudisiumSiding(YudisiumSiding $yudisiumSiding)
+    {
+        $studentName = $yudisiumSiding->student->nama;
+        $sidingId = $yudisiumSiding->id;
+
+        // Delete photos if exist
+        if ($yudisiumSiding->dosen_wali_foto) {
+            Storage::disk('public')->delete($yudisiumSiding->dosen_wali_foto);
+        }
+        if ($yudisiumSiding->pembimbing_1_foto) {
+            Storage::disk('public')->delete($yudisiumSiding->pembimbing_1_foto);
+        }
+
+        \App\Models\Activity::log('delete_yudisium_siding', 
+            'Menghapus data sidang yudisium untuk mahasiswa: ' . $studentName, 
+            'YudisiumSiding', 
+            $sidingId
+        );
+
+        $yudisiumSiding->delete();
+
+        return redirect()->route('admin.yudisium-sidings')
+            ->with('success', 'Data sidang yudisium berhasil dihapus!');
     }
 }
