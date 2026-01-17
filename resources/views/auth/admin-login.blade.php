@@ -3,7 +3,7 @@
     
     <!-- Header -->
     <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-2">Masuk Admin</h2>
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Selamat Datang</h2>
         <p class="text-gray-600">Masuk ke akun admin SIYU</p>
     </div>
 

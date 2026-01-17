@@ -34,6 +34,20 @@
             <main>
                 @yield('content')
             </main>
+
+            <!-- Footer -->
+            <footer class="w-full bg-white border-t border-gray-200 mt-auto">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <span>&copy; {{ date('Y') }} SIYU - Sistem Informasi Yudisium. All rights reserved.</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <span>Fakultas Rekayasa Industri - Telkom University</span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     </body>
 </html>

@@ -1,1 +1,0 @@
-<li><a href="/admin/add-periode">Add Periode</a></li>

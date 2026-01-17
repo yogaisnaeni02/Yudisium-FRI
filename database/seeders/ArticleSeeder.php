@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class ArticleSeeder extends Seeder
 {
@@ -15,16 +16,14 @@ class ArticleSeeder extends Seeder
     public function run(): void
     {
         // Get admin user (first admin or create one)
-        $admin = User::where('role', 'admin')->first();
-        
-        if (!$admin) {
-            $admin = User::create([
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@yudisium.com'],
+            [
                 'name' => 'Admin User',
-                'email' => 'admin@yudisium.com',
                 'password' => bcrypt('password'),
                 'role' => 'admin',
-            ]);
-        }
+            ]
+        );
 
         $articles = [
             [
@@ -118,9 +117,13 @@ Dokumen pendukung yang dapat disertakan:
         ];
 
         foreach ($articles as $articleData) {
-            Article::create(array_merge($articleData, [
+            Article::firstOrCreate(
+                ['slug' => Str::slug($articleData['title'])],
+                array_merge($articleData, [
+                    'slug' => Str::slug($articleData['title']),
                 'user_id' => $admin->id,
-            ]));
+                ])
+            );
         }
     }
 }

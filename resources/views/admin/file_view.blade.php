@@ -1,1 +1,0 @@
-<a href="{{ route('file.show', $file->id) }}" target="_blank">Lihat File</a>

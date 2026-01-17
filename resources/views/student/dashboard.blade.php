@@ -18,33 +18,57 @@
     <!-- Main Grid: 3 Columns -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Column 1: Profile Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition">
             <div class="flex items-center gap-6">
-                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-3xl text-white font-bold shadow-lg">
-                    {{ strtoupper(substr($studentName, 0, 1)) }}
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-3xl text-white font-bold shadow-lg overflow-hidden">
+                    @if ($student->foto)
+                        <img src="{{ Storage::url($student->foto) }}?t={{ time() }}" alt="Profile Photo" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($studentName, 0, 1)) }}
+                    @endif
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">{{ $studentName }}</h3>
                     <div class="text-sm text-gray-600">NIM: {{ $student->nim }}</div>
-                    <div class="text-sm text-gray-600">Program Studi: {{ $student->program_studi ?? 'S1 Sistem Informasi' }}</div>
+                    <div class="text-sm text-gray-600">Program Studi: {{ $student->prodi }}</div>
                 </div>
             </div>
 
             <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <div class="text-xs text-gray-500 mb-1">IPK</div>
-                    <div class="font-bold text-gray-900 text-lg">{{ $student->ipk }}</div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div class="text-xs text-green-700 mb-1 font-semibold">IPK</div>
+                    <div class="font-bold text-green-900 text-lg">{{ $student->ipk }}</div>
                 </div>
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <div class="text-xs text-gray-500 mb-1">Total SKS</div>
-                    <div class="font-bold text-gray-900 text-lg">{{ $student->total_sks }}</div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div class="text-xs text-green-700 mb-1 font-semibold">Total SKS</div>
+                    <div class="font-bold text-green-900 text-lg">{{ $student->total_sks }}</div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div class="text-xs text-green-700 mb-1 font-semibold">Total TAK</div>
+                    <div class="font-bold text-green-900 text-lg">{{ $student->tak ?? '-' }}</div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div class="text-xs text-green-700 mb-1 font-semibold">IKK</div>
+                    <div class="font-bold text-green-900 text-lg">
+                        @if($student->tak)
+                            {{ number_format(($student->tak / 120) * 4, 2) }}
+                        @else
+                            -
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Column 2: Timeline Yudisium -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
-            <h4 class="font-semibold text-gray-800 mb-4 text-lg">Timeline Yudisium</h4>
+        <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition">
+            <h4 class="font-semibold text-green-800 mb-4 text-lg">Timeline Yudisium</h4>
+            @php
+                $hasRevision = $documents->where('status', 'revision')->count() > 0;
+                $allApproved = $documents->count() > 0 && $documents->where('status', 'approved')->count() === $documents->count();
+                $hasSubmitted = $submission->status === 'submitted';
+                $isApproved = $submission->status === 'approved';
+            @endphp
             <ul class="space-y-3 text-sm text-gray-700">
                 <!-- Item 1: Memuat Profile -->
                 <li class="flex items-start gap-3">
@@ -74,66 +98,141 @@
 
                 <!-- Item 3: Upload Berkas -->
                 <li class="flex items-start gap-3">
-                    <div class="text-yellow-500 mt-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                    @php
+                        $hasRejected = $documents->where('status', 'rejected')->count() > 0;
+                        $hasRevision = $documents->where('status', 'revision')->count() > 0;
+                        $hasNoUpload = $documents->count() === 0;
+                    @endphp
+                    @if(!$hasNoUpload && !$hasRejected && !$hasRevision)
+                        <div class="text-green-600 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @elseif($hasRejected || $hasRevision)
+                        <div class="text-yellow-500 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="text-yellow-500 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1">
                         <div class="font-medium">Upload Berkas</div>
-                        <div class="text-xs text-gray-500">Unggah semua dokumen yang diperlukan</div>
+                        <div class="text-xs text-gray-500">
+                            @if($hasRejected)
+                                Ada dokumen yang ditolak - segera perbaiki
+                            @elseif($hasRevision)
+                                Ada dokumen yang perlu revisi
+                            @else
+                                Unggah semua dokumen yang diperlukan
+                            @endif
+                        </div>
                     </div>
                 </li>
 
                 <!-- Item 4: Verifikasi -->
                 <li class="flex items-start gap-3">
-                    <div class="text-gray-400 mt-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                    @if($allApproved)
+                        <div class="text-green-600 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @elseif($documents->count() > 0)
+                        <div class="text-yellow-500 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="text-gray-400 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1">
-                        <div class="font-medium text-gray-400">Verifikasi</div>
-                        <div class="text-xs text-gray-400">Tunggu verifikasi dari admin</div>
+                        <div class="font-medium @if($documents->count() == 0) text-gray-400 @endif">Verifikasi</div>
+                        @if($allApproved)
+                            <div class="text-xs text-gray-500">Dokumen telah verifikasi oleh admin</div>
+                        @else($documents->count() > 0)
+                            <div class="text-xs text-gray-500">Dokumen sedang dalam proses verifikasi</div>
+                        @endif
                     </div>
                 </li>
 
                 <!-- Item 5: Revisi -->
                 <li class="flex items-start gap-3">
-                    <div class="text-gray-400 mt-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                    @if($hasRevision)
+                        <div class="text-yellow-500 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @elseif($allApproved)
+                        <div class="text-green-600 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="text-gray-400 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1">
-                        <div class="font-medium text-gray-400">Revisi</div>
-                        <div class="text-xs text-gray-400">Jika diperlukan revisi</div>
+                        <div class="font-medium @if(!$hasRevision && !$allApproved) text-gray-400 @endif">Revisi</div>
+                        <div class="text-xs text-gray-500">Jika diperlukan revisi</div>
                     </div>
                 </li>
 
                 <!-- Item 6: Disetujui -->
                 <li class="flex items-start gap-3">
-                    <div class="text-gray-400 mt-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                    @if($allApproved)
+                        <div class="text-green-600 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="text-gray-400 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1">
-                        <div class="font-medium text-gray-400">Disetujui</div>
-                        <div class="text-xs text-gray-400">Pengajuan yudisium disetujui</div>
+                        <div class="font-medium @if(!$isApproved && !$allApproved) text-gray-400 @endif">Disetujui</div>
+                        <div class="text-xs @if(!$isApproved && !$allApproved) text-gray-400 @endif">Pengajuan yudisium disetujui</div>
                     </div>
                 </li>
 
                 <!-- Item 7: Selesai -->
                 <li class="flex items-start gap-3">
-                    <div class="text-gray-400 mt-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
+                    @if($allApproved)
+                        <div class="text-green-600 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="text-gray-400 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1">
-                        <div class="font-medium text-gray-400">Selesai</div>
-                        <div class="text-xs text-gray-400">Proses yudisium selesai</div>
+                        <div class="font-medium @if(!$allApproved) text-gray-400 @endif">Selesai</div>
+                        <div class="text-xs @if(!$allApproved) text-gray-400 @endif">Proses yudisium selesai</div>
                     </div>
                 </li>
             </ul>
@@ -142,14 +241,14 @@
         <!-- Column 3: Right Panel (Progress + Quick Actions) -->
         <div class="space-y-6">
             <!-- Progress Dokumen -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
-                <h5 class="font-semibold text-gray-800 mb-4">Progress Dokumen</h5>
+            <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition">
+                <h5 class="font-semibold text-green-800 mb-4">Progress Dokumen</h5>
                 <div class="mb-4">
-                    <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="w-full bg-green-100 rounded-full h-4">
                         <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-500" style="width: {{ $progress }}%"></div>
                     </div>
                     <div class="mt-2 text-center">
-                        <span class="text-2xl font-bold text-gray-900">{{ $progress }}%</span>
+                        <span class="text-2xl font-bold text-green-900">{{ $progress }}%</span>
                     </div>
                 </div>
                 <div class="text-sm text-gray-600 space-y-1">
@@ -158,7 +257,7 @@
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
-                            Diterima:
+                            Disetujui:
                         </span>
                         <span class="font-semibold text-green-600">{{ $documents->where('status','approved')->count() }}</span>
                     </div>
@@ -173,21 +272,20 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Kosong:
                         </span>
-                        <span class="font-semibold text-gray-600">{{ $documents->whereNull('file_path')->count() }}</span>
+                        <span class="font-semibold text-yellow-600">{{ $documents->whereNull('file_path')->count() }}</span>
                     </div>
                 </div>
             </div>
-
             <!-- Quick Actions -->
             <div class="bg-gradient-to-br from-green-50 to-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition">
-                <h5 class="font-semibold text-gray-800 mb-4">Quick Actions</h5>
+                <h5 class="font-semibold text-green-800 mb-4">Quick Actions</h5>
                 <div class="space-y-3">
-                    <a href="{{ route('student.pengajuan-yudisium') }}" class="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition text-center flex items-center justify-center gap-2">
+                    <a href="{{ route('student.pengajuan-yudisium') }}" class="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition text-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                         </svg>
@@ -196,7 +294,7 @@
                     @if($submission->status === 'draft' && $documents->count() > 0)
                     <form action="{{ route('student.submit-application') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
@@ -213,9 +311,9 @@
 
 
     <!-- Informasi Yudisium Terbaru -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+    <div class="bg-white rounded-xl shadow-sm border border-green-200 p-6 hover:shadow-md transition">
         <div class="flex items-center justify-between mb-6">
-            <h5 class="font-semibold text-gray-800 text-lg">Informasi Yudisium Terbaru</h5>
+            <h5 class="font-semibold text-green-800 text-lg">Informasi Yudisium Terbaru</h5>
             <a href="{{ route('student.articles') }}" class="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1">
                 Lihat Semua
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

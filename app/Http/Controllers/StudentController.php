@@ -6,9 +6,11 @@ use App\Models\Student;
 use App\Models\Submission;
 use App\Models\Document;
 use App\Models\Article;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class StudentController extends Controller
 {
@@ -43,12 +45,16 @@ class StudentController extends Controller
             ->limit(5)
             ->get();
 
+        // Get unread notifications count
+        $unreadNotificationsCount = \App\Services\NotificationService::getUnreadCount($user->id);
+
         return view('student.dashboard', [
             'student' => $student,
             'submission' => $submission,
             'documents' => $documents,
             'progress' => $progress,
             'latestArticles' => $latestArticles,
+            'unreadNotificationsCount' => $unreadNotificationsCount,
         ]);
     }
 
@@ -69,7 +75,7 @@ class StudentController extends Controller
         }
 
         // If grouped files (bulk per section) were sent
-        if ($request->hasFile('files')) {
+        if ($request->has('group_name')) {
             $results = [];
 
             foreach ($request->file('files') as $typeSlug => $files) {
@@ -263,7 +269,7 @@ class StudentController extends Controller
         $documents = $submission->documents()->get();
         $progress = $submission->getProgressPercentage();
 
-        return view('student.pengajuan-yudisium', [
+        return view('student.pengajuan.yudisium', [
             'student' => $student,
             'submission' => $submission,
             'documents' => $documents,
@@ -280,7 +286,7 @@ class StudentController extends Controller
             ->orderBy('published_at', 'desc')
             ->paginate(12);
 
-        return view('student.articles', [
+        return view('student.articles.index', [
             'articles' => $articles,
         ]);
     }
@@ -298,8 +304,106 @@ class StudentController extends Controller
         // Increment views
         $article->incrementViews();
 
-        return view('student.article-detail', [
+        return view('student.articles.detail', [
             'article' => $article,
         ]);
+    }
+
+    /**
+     * Show profile edit page.
+     */
+    public function editProfile(): View
+    {
+        $user = Auth::user();
+        $student = Student::where('user_id', $user->id)->first();
+
+        if (!$student) {
+            abort(404);
+        }
+
+        return redirect()->route('profile.edit');
+    }
+
+    /**
+     * Update student profile photo.
+     */
+    public function updateProfilePhoto(Request $request)
+    {
+        $request->validate([
+            'foto' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = Auth::user();
+
+        // Delete old photo if exists
+        if ($user->foto && \Storage::exists('public/' . $user->foto)) {
+            \Storage::delete('public/' . $user->foto);
+        }
+
+        // Store new photo
+        $path = $request->file('foto')->store('users/photos', 'public');
+
+        $user->update([
+            'foto' => $path,
+        ]);
+
+        return response()->json([
+            'message' => 'Foto profile berhasil diperbarui',
+            'foto' => \Storage::url($path),
+        ]);
+    }
+
+    /**
+     * Get notifications for the authenticated user.
+     */
+    public function getNotifications(): JsonResponse
+    {
+        $user = Auth::user();
+        $notifications = Notification::forUser($user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unreadCount' => $notifications->where('is_read', false)->count(),
+        ]);
+    }
+
+    /**
+     * Mark notification as read.
+     */
+    public function markNotificationAsRead(Notification $notification): JsonResponse
+    {
+        $user = Auth::user();
+
+        if ($notification->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $notification->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark all notifications as read.
+     */
+    public function markAllNotificationsAsRead(): JsonResponse
+    {
+        $user = Auth::user();
+        Notification::forUser($user->id)->unread()->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete all notifications for the authenticated user.
+     */
+    public function deleteAllNotifications(): JsonResponse
+    {
+        $user = Auth::user();
+        Notification::forUser($user->id)->delete();
+
+        return response()->json(['success' => true]);
     }
 }

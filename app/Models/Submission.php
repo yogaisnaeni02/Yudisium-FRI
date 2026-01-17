@@ -10,6 +10,7 @@ class Submission extends Model
 {
     protected $fillable = [
         'student_id',
+        'periode_id',
         'status',
         'submitted_at',
         'progress',
@@ -26,6 +27,14 @@ class Submission extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Get the periode associated with the submission.
+     */
+    public function periode(): BelongsTo
+    {
+        return $this->belongsTo(Periode::class);
     }
 
     /**
