@@ -12,14 +12,17 @@ class Student extends Model
         'user_id',
         'nim',
         'nama',
+        'foto',
+        'prodi',
+        'tak',
+        'dosen_wali',
+        'pembimbing_1',
+        'pembimbing_2',
+        'penguji_ketua',
+        'penguji_anggota',
         'ipk',
         'total_sks',
         'status_kelulusan',
-        'mata_kuliah',
-    ];
-
-    protected $casts = [
-        'mata_kuliah' => 'json',
     ];
 
     /**

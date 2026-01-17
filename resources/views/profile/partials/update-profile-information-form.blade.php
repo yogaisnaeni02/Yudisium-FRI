@@ -14,13 +14,13 @@
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Nama')" class="text-gray-700 font-semibold mb-2" />
+            <x-input-label for="name" :value="__('Nama')" class="text-gray-900 font-semibold mb-2" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" class="text-gray-700 font-semibold mb-2" />
+            <x-input-label for="email" :value="__('Email')" class="text-gray-900 font-semibold mb-2" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 

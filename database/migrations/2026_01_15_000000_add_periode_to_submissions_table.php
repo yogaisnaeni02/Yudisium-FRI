@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('submissions', function (Blueprint $table) {
-            $table->dropForeignIdFor('Periode');
+            $table->dropConstrainedForeignId('periode_id');
         });
     }
 };

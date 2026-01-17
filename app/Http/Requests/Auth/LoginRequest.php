@@ -62,8 +62,8 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Check if user has mahasiswa role
-        if (Auth::user()->role !== 'mahasiswa') {
+        // Check if user has student role
+        if (Auth::user()->role !== 'student') {
             Auth::logout();
             
             throw ValidationException::withMessages([

@@ -6,10 +6,11 @@ use App\Models\Student;
 use App\Models\Submission;
 use App\Models\Document;
 use App\Models\Article;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class StudentController extends Controller
 {
@@ -44,12 +45,16 @@ class StudentController extends Controller
             ->limit(5)
             ->get();
 
+        // Get unread notifications count
+        $unreadNotificationsCount = \App\Services\NotificationService::getUnreadCount($user->id);
+
         return view('student.dashboard', [
             'student' => $student,
             'submission' => $submission,
             'documents' => $documents,
             'progress' => $progress,
             'latestArticles' => $latestArticles,
+            'unreadNotificationsCount' => $unreadNotificationsCount,
         ]);
     }
 
@@ -58,14 +63,6 @@ class StudentController extends Controller
      */
     public function uploadDocument(Request $request)
     {
-        \Log::info('Upload document called', [
-            'has_files' => $request->hasFile('files'),
-            'all_files' => $request->allFiles(),
-            'all_data' => $request->all()
-        ]);
-
-        // No validation required - we'll handle it gracefully in the loop
-
         $user = Auth::user();
         $student = Student::where('user_id', $user->id)->first();
         $submission = $student->submissions()->latest()->first();
@@ -78,119 +75,36 @@ class StudentController extends Controller
         }
 
         // If grouped files (bulk per section) were sent
-        if ($request->has('files') && is_array($request->file('files')) && !empty($request->file('files'))) {
-            \Log::info('Processing bulk upload', [
-                'files_structure' => $request->file('files'),
-                'raw_request_files' => $request->allFiles(),
-                'request_all' => $request->all()
-            ]);
+        if ($request->has('group_name')) {
             $results = [];
-            $processedCount = 0;
-            $skippedCount = 0;
-
-            // Define all valid document types and their display names
-            // Note: These slugs must match exactly what \Illuminate\Support\Str::slug() generates from the display names
-            $validDocumentTypes = [
-                'surat-pernyataan' => 'Surat Pernyataan',
-                'form-biodata-izajah-transkip' => 'Form Biodata Izajah & Transkip',
-                'ktp' => 'KTP',
-                'akta-lahir' => 'Akta Lahir',
-                'ijazah-pendidikan-terakhir' => 'Ijazah Pendidikan Terakhir',
-                'buku-ta-yang-disahkan' => 'Buku TA yang Disahkan',
-                'slide-ppt' => 'Slide PPT',
-                'screenshot-gracias' => 'Screenshot (Gracias)',
-                'berkas-referensi-minimal-10' => 'Berkas Referensi (Minimal 10)',
-                'bukti-approval-revisi-sofi' => 'Bukti Approval Revisi (SOFI)',
-                'bukti-approval-skpi' => 'Bukti Approval SKPI',
-                'surat-keterangan-bebas-pustaka-skbp' => 'Surat Keterangan Bebas Pustaka (SKBP)',
-                'dokumen-cumlaude-publikasilombahki' => 'Dokumen Cumlaude (Publikasi/Lomba/HKI)',
-                'dokumen-pendukung-tambahan' => 'Dokumen Pendukung Tambahan',
-            ];
 
             foreach ($request->file('files') as $typeSlug => $files) {
-                \Log::info('Processing typeSlug: ' . $typeSlug, [
-                    'files_type' => gettype($files),
-                    'files_count' => is_array($files) ? count($files) : (is_object($files) ? 'object' : 'not_array'),
-                    'files_value' => is_array($files) ? 'array' : (is_object($files) ? get_class($files) : $files),
-                    'valid_keys' => array_keys($validDocumentTypes),
-                    'is_in_valid' => isset($validDocumentTypes[$typeSlug])
-                ]);
-
-                // Skip if this typeSlug is not in our valid list
-                if (!isset($validDocumentTypes[$typeSlug])) {
-                    \Log::warning('Invalid document type slug received', [
-                        'typeSlug' => $typeSlug,
-                        'valid_types' => array_keys($validDocumentTypes)
-                    ]);
-                    $skippedCount++;
-                    continue;
-                }
-
-                // Handle both single file and array of files
-                $filesArray = is_array($files) ? $files : [$files];
-
-                \Log::info('Files array for ' . $typeSlug, [
-                    'array_count' => count($filesArray),
-                    'array_keys' => array_keys($filesArray)
-                ]);
-
-                foreach ($filesArray as $index => $file) {
-                    \Log::info('Processing file at index ' . $index, [
-                        'filename' => $file ? $file->getClientOriginalName() : 'null',
-                        'is_valid' => $file ? $file->isValid() : false,
-                        'file_type' => gettype($file),
-                        'file_class' => is_object($file) ? get_class($file) : 'not_object'
-                    ]);
-
+                foreach ($files as $file) {
                     if (!$file || !$file->isValid()) {
-                        \Log::warning('File is invalid or null', ['typeSlug' => $typeSlug, 'index' => $index]);
-                        $skippedCount++;
                         continue;
                     }
 
                     $ext = strtolower($file->getClientOriginalExtension());
                     if (!in_array($ext, ['pdf','doc','docx'])) {
-                        \Log::warning('Invalid file extension', ['ext' => $ext, 'typeSlug' => $typeSlug, 'filename' => $file->getClientOriginalName()]);
-                        $skippedCount++;
                         continue;
                     }
 
                     if ($file->getSize() > 5 * 1024 * 1024) {
-                        \Log::warning('File too large', ['size' => $file->getSize(), 'typeSlug' => $typeSlug, 'filename' => $file->getClientOriginalName()]);
-                        $skippedCount++;
                         continue;
                     }
 
-                    // Use the predefined document type name
-                    $typeName = $validDocumentTypes[$typeSlug];
-
-                    // Try to find existing document by exact type name match
-                    $existingDocument = $submission->documents->first(function ($d) use ($typeName) {
-                        return $d->type === $typeName;
+                    // Try to find existing document by slug matching existing document types
+                    $existingDocument = $submission->documents->first(function ($d) use ($typeSlug) {
+                        return \Illuminate\Support\Str::slug($d->type) === $typeSlug;
                     });
 
-                    \Log::info('Existing document check', [
-                        'typeSlug' => $typeSlug,
-                        'typeName' => $typeName,
-                        'existing_found' => $existingDocument ? true : false,
-                        'existing_id' => $existingDocument ? $existingDocument->id : null
-                    ]);
-
                     $filePath = $file->store('yudisium/documents', 'private');
-                    $fileContent = base64_encode(file_get_contents($file->getRealPath()));
 
-                    \Log::info('Creating/updating document', [
-                        'typeName' => $typeName,
-                        'filename' => $file->getClientOriginalName()
-                    ]);
+                    $typeName = $existingDocument ? $existingDocument->type : \Illuminate\Support\Str::title(str_replace('-', ' ', $typeSlug));
 
                     if ($existingDocument) {
                         $existingDocument->update([
-                            'type' => $typeName,
                             'file_path' => $filePath,
-                            'file_content' => $fileContent,
-                            'mime_type' => $file->getMimeType(),
-                            'original_filename' => $file->getClientOriginalName(),
                             'status' => 'pending',
                             'feedback' => null,
                         ]);
@@ -203,9 +117,6 @@ class StudentController extends Controller
                             'type' => $typeName,
                             'name' => $file->getClientOriginalName(),
                             'file_path' => $filePath,
-                            'file_content' => $fileContent,
-                            'mime_type' => $file->getMimeType(),
-                            'original_filename' => $file->getClientOriginalName(),
                             'status' => 'pending',
                         ]);
 
@@ -218,17 +129,8 @@ class StudentController extends Controller
                         'type' => $document->type,
                         'download_url' => route('admin.download-document', $document),
                     ];
-
-                    $processedCount++;
-                    \Log::info('Document processed successfully', ['count' => $processedCount, 'type' => $typeName]);
                 }
             }
-
-            \Log::info('Bulk upload completed', [
-                'total_processed' => $processedCount,
-                'total_skipped' => $skippedCount,
-                'results_count' => count($results)
-            ]);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -258,7 +160,6 @@ class StudentController extends Controller
             ->first();
 
         $filePath = $request->file('file')->store('yudisium/documents', 'private');
-        $fileContent = base64_encode(file_get_contents($request->file('file')->getRealPath()));
 
         // Build metadata from optional inputs
         $metadata = [];
@@ -282,9 +183,6 @@ class StudentController extends Controller
             // Update existing document (new version)
             $existingDocument->update([
                 'file_path' => $filePath,
-                'file_content' => $fileContent,
-                'mime_type' => $request->file('file')->getMimeType(),
-                'original_filename' => $request->file('file')->getClientOriginalName(),
                 'status' => 'pending',
                 'feedback' => null,
                 'metadata' => array_merge($existingDocument->metadata ?? [], $metadata),
@@ -299,9 +197,6 @@ class StudentController extends Controller
                 'type' => $request->document_type,
                 'name' => $request->file('file')->getClientOriginalName(),
                 'file_path' => $filePath,
-                'file_content' => $fileContent,
-                'mime_type' => $request->file('file')->getMimeType(),
-                'original_filename' => $request->file('file')->getClientOriginalName(),
                 'status' => 'pending',
                 'metadata' => $metadata,
             ]);
@@ -374,7 +269,7 @@ class StudentController extends Controller
         $documents = $submission->documents()->get();
         $progress = $submission->getProgressPercentage();
 
-        return view('student.pengajuan-yudisium', [
+        return view('student.pengajuan.yudisium', [
             'student' => $student,
             'submission' => $submission,
             'documents' => $documents,
@@ -391,7 +286,7 @@ class StudentController extends Controller
             ->orderBy('published_at', 'desc')
             ->paginate(12);
 
-        return view('student.articles', [
+        return view('student.articles.index', [
             'articles' => $articles,
         ]);
     }
@@ -409,8 +304,106 @@ class StudentController extends Controller
         // Increment views
         $article->incrementViews();
 
-        return view('student.article-detail', [
+        return view('student.articles.detail', [
             'article' => $article,
         ]);
+    }
+
+    /**
+     * Show profile edit page.
+     */
+    public function editProfile(): View
+    {
+        $user = Auth::user();
+        $student = Student::where('user_id', $user->id)->first();
+
+        if (!$student) {
+            abort(404);
+        }
+
+        return redirect()->route('profile.edit');
+    }
+
+    /**
+     * Update student profile photo.
+     */
+    public function updateProfilePhoto(Request $request)
+    {
+        $request->validate([
+            'foto' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = Auth::user();
+
+        // Delete old photo if exists
+        if ($user->foto && \Storage::exists('public/' . $user->foto)) {
+            \Storage::delete('public/' . $user->foto);
+        }
+
+        // Store new photo
+        $path = $request->file('foto')->store('users/photos', 'public');
+
+        $user->update([
+            'foto' => $path,
+        ]);
+
+        return response()->json([
+            'message' => 'Foto profile berhasil diperbarui',
+            'foto' => \Storage::url($path),
+        ]);
+    }
+
+    /**
+     * Get notifications for the authenticated user.
+     */
+    public function getNotifications(): JsonResponse
+    {
+        $user = Auth::user();
+        $notifications = Notification::forUser($user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unreadCount' => $notifications->where('is_read', false)->count(),
+        ]);
+    }
+
+    /**
+     * Mark notification as read.
+     */
+    public function markNotificationAsRead(Notification $notification): JsonResponse
+    {
+        $user = Auth::user();
+
+        if ($notification->user_id !== $user->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $notification->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark all notifications as read.
+     */
+    public function markAllNotificationsAsRead(): JsonResponse
+    {
+        $user = Auth::user();
+        Notification::forUser($user->id)->unread()->update(['is_read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete all notifications for the authenticated user.
+     */
+    public function deleteAllNotifications(): JsonResponse
+    {
+        $user = Auth::user();
+        Notification::forUser($user->id)->delete();
+
+        return response()->json(['success' => true]);
     }
 }

@@ -15,20 +15,13 @@
 <div class="space-y-6">
     <!-- Action Buttons -->
     <div class="flex items-center justify-between">
-        <a href="{{ route('admin.yudisium-sidings') }}" class="text-green-600 hover:text-green-700 font-semibold flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
+        <x-button variant="ghost" href="{{ route('admin.yudisium-sidings') }}" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>'>
             Kembali
-        </a>
+        </x-button>
         <div class="flex gap-2">
-            <a href="{{ route('admin.yudisium-sidings.edit', $siding) }}" 
-                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition shadow-sm hover:shadow flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
+            <x-button variant="primary" href="{{ route('admin.yudisium-sidings.edit', $siding) }}" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>'>
                 Edit
-            </a>
+            </x-button>
         </div>
     </div>
 
@@ -82,14 +75,14 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-600">Program Studi</label>
-                                <p class="text-lg text-gray-900">PROGRAM STUDI S1 TEKNIK INDUSTRI</p>
+                                <p class="text-lg text-gray-900">{{ $siding->student->prodi }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-center md:justify-end">
                         <div class="w-32 h-40 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                            @if($siding->student->user && $siding->student->user->profile_photo_path)
-                                <img src="{{ Storage::url($siding->student->user->profile_photo_path) }}" alt="Foto Mahasiswa" class="w-full h-full object-cover rounded-lg">
+                            @if($siding->student->foto)
+                                <img src="{{ Storage::url($siding->student->foto) }}" alt="Foto Mahasiswa" class="w-full h-full object-cover rounded-lg">
                             @else
                                 <span class="text-gray-400 text-sm text-center px-2">Foto Mahasiswa</span>
                             @endif
@@ -101,7 +94,7 @@
             <!-- Academic Summary Section -->
             <div class="border-b border-gray-200 pb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Ringkasan Akademik</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
                     <!-- Dosen Wali -->
                     <div>
                         <label class="text-sm font-medium text-gray-600 mb-2 block">Dosen Wali</label>
@@ -120,7 +113,7 @@
                     </div>
                     <!-- IPK -->
                     <div>
-                        <label class="text-sm font-medium text-gray-600 mb-2 block">IPK Sementara</label>
+                        <label class="text-sm font-medium text-gray-600 mb-2 block">IPK</label>
                         <p class="text-2xl font-bold text-gray-900">{{ number_format($siding->student->ipk ?? 0, 2) }}</p>
                     </div>
                     <!-- EPRT -->
@@ -131,7 +124,12 @@
                     <!-- TAK -->
                     <div>
                         <label class="text-sm font-medium text-gray-600 mb-2 block">TAK</label>
-                        <p class="text-2xl font-bold text-gray-900">-</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $siding->student->tak ?? '-' }}</p>
+                    </div>
+                    <!-- IKK -->
+                    <div>
+                        <label class="text-sm font-medium text-gray-600 mb-2 block">IKK</label>
+                        <p class="text-2xl font-bold text-gray-900">{{ number_format(($siding->student->tak / 120) * 4, 2) }}</p>
                     </div>
                 </div>
             </div>
@@ -184,11 +182,15 @@
                     <!-- Pembimbing 2 -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <div class="flex items-center gap-4 mb-3">
-                            <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
+                            @if($siding->pembimbing_2_foto)
+                                <img src="{{ Storage::url($siding->pembimbing_2_foto) }}" alt="Pembimbing 2" class="w-16 h-16 rounded-full object-cover border-2 border-gray-300">
+                            @else
+                                <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            @endif
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Pembimbing 2</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->pembimbing_2_nama ?? '-' }}</p>
@@ -202,11 +204,15 @@
                     <!-- Penguji Ketua -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <div class="flex items-center gap-4 mb-3">
-                            <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
+                            @if($siding->penguji_ketua_foto)
+                                <img src="{{ Storage::url($siding->penguji_ketua_foto) }}" alt="Penguji Ketua" class="w-16 h-16 rounded-full object-cover border-2 border-gray-300">
+                            @else
+                                <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            @endif
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Penguji Ketua</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->penguji_ketua_nama ?? '-' }}</p>
@@ -220,11 +226,15 @@
                     <!-- Penguji Anggota -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <div class="flex items-center gap-4 mb-3">
-                            <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
+                            @if($siding->penguji_anggota_foto)
+                                <img src="{{ Storage::url($siding->penguji_anggota_foto) }}" alt="Penguji Anggota" class="w-16 h-16 rounded-full object-cover border-2 border-gray-300">
+                            @else
+                                <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            @endif
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Penguji Anggota</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->penguji_anggota_nama ?? '-' }}</p>

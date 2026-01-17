@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\HelpController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,19 +26,28 @@ Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->gr
     Route::post('/submit-application', [StudentController::class, 'submitApplication'])->name('submit-application');
     Route::get('/articles', [StudentController::class, 'articles'])->name('articles');
     Route::get('/articles/{article}', [StudentController::class, 'showArticle'])->name('article-detail');
+    Route::get('/profile', [StudentController::class, 'editProfile'])->name('profile');
+    Route::post('/profile/photo', [StudentController::class, 'updateProfilePhoto'])->name('update-profile-photo');
+    Route::get('/notifications', [StudentController::class, 'getNotifications'])->name('notifications');
+    Route::post('/notifications/{notification}/read', [StudentController::class, 'markNotificationAsRead'])->name('mark-notification-read');
+    Route::post('/notifications/read-all', [StudentController::class, 'markAllNotificationsAsRead'])->name('mark-all-notifications-read');
+    Route::delete('/notifications/delete-all', [StudentController::class, 'deleteAllNotifications'])->name('delete-all-notifications');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/verifikasi-pengajuan', [AdminController::class, 'verifikasiPengajuan'])->name('verifikasi-pengajuan');
+    Route::get('/verifikasi-pengajuan/export', [AdminController::class, 'exportSubmissions'])->name('verifikasi-pengajuan.export');
     Route::get('/submission/{submission}', [AdminController::class, 'viewSubmission'])->name('submission-detail');
     Route::patch('/submission/{submission}/verification', [AdminController::class, 'updateVerification'])->name('update-verification');
     Route::patch('/document/{document}/status', [AdminController::class, 'updateDocumentStatus'])->name('update-document-status');
     Route::patch('/submission/{submission}/batch-update', [AdminController::class, 'batchUpdateDocuments'])->name('batch-update-documents');
+    Route::get('/document/{document}/preview', [AdminController::class, 'previewDocument'])->name('preview-document');
     Route::get('/document/{document}/download', [AdminController::class, 'downloadDocument'])->name('download-document');
     
     // User Management
     Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::get('/users/export', [AdminController::class, 'exportUsers'])->name('users.export');
     Route::get('/users/create', [AdminController::class, 'createUser'])->name('users.create');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
     Route::get('/users/import', [AdminController::class, 'showImportUsers'])->name('users.import');
@@ -64,6 +74,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Yudisium Siding Management
     Route::get('/yudisium-sidings', [AdminController::class, 'yudisiumSidings'])->name('yudisium-sidings');
+    Route::get('/yudisium-sidings/export', [AdminController::class, 'exportYudisiumSidings'])->name('yudisium-sidings.export');
     Route::get('/yudisium-sidings/create', [AdminController::class, 'createYudisiumSiding'])->name('yudisium-sidings.create');
     Route::post('/yudisium-sidings', [AdminController::class, 'storeYudisiumSiding'])->name('yudisium-sidings.store');
     Route::get('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'showYudisiumSiding'])->name('yudisium-sidings.show');
@@ -76,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/help', [HelpController::class, 'index'])->name('help.index');
 });
 
 require __DIR__.'/auth.php';

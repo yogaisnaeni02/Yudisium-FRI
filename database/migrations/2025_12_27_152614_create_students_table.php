@@ -19,8 +19,6 @@ return new class extends Migration
             $table->decimal('ipk', 3, 2);
             $table->integer('total_sks');
             $table->enum('status_kelulusan', ['lulus', 'belum_lulus'])->default('belum_lulus');
-            $table->json('mata_kuliah')->nullable(); // Status kelulusan mata kuliah
-            $table->string('kode_dosen');
             $table->timestamps();
         });
     }

@@ -10,7 +10,6 @@ class YudisiumSiding extends Model
     protected $fillable = [
         'periode_id',
         'student_id',
-        'mahasiswa_id', // Keep for backward compatibility
         'tanggal_sidang',
         'predikat',
         'predikat_yudisium',
@@ -23,12 +22,15 @@ class YudisiumSiding extends Model
         'pembimbing_1_nilai',
         // Pembimbing 2
         'pembimbing_2_nama',
+        'pembimbing_2_foto',
         'pembimbing_2_nilai',
         // Penguji Ketua
         'penguji_ketua_nama',
+        'penguji_ketua_foto',
         'penguji_ketua_nilai',
         // Penguji Anggota
         'penguji_anggota_nama',
+        'penguji_anggota_foto',
         'penguji_anggota_nilai',
         // Tugas Akhir
         'judul_tugas_akhir',
@@ -69,15 +71,7 @@ class YudisiumSiding extends Model
             }
         }
         
-        return $this->belongsTo(Student::class, $useStudentId ? 'student_id' : 'mahasiswa_id');
-    }
-
-    /**
-     * Get the mahasiswa (backward compatibility).
-     */
-    public function mahasiswa()
-    {
-        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id');
+        return $this->belongsTo(Student::class);
     }
 
     /**
@@ -86,31 +80,5 @@ class YudisiumSiding extends Model
     public function periode(): BelongsTo
     {
         return $this->belongsTo(Periode::class);
-    }
-
-    /**
-     * Get student ID (support both student_id and mahasiswa_id).
-     */
-    public function getStudentIdAttribute()
-    {
-        if (isset($this->attributes['student_id'])) {
-            return $this->attributes['student_id'];
-        }
-        if (isset($this->attributes['mahasiswa_id'])) {
-            return $this->attributes['mahasiswa_id'];
-        }
-        return null;
-    }
-
-    /**
-     * Set student ID (support both student_id and mahasiswa_id).
-     */
-    public function setStudentIdAttribute($value)
-    {
-        $this->attributes['student_id'] = $value;
-        // Also set mahasiswa_id for backward compatibility
-        if (array_key_exists('mahasiswa_id', $this->attributes) || isset($this->attributes['mahasiswa_id'])) {
-            $this->attributes['mahasiswa_id'] = $value;
-        }
     }
 }

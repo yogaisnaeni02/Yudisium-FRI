@@ -28,7 +28,7 @@
                     <select name="student_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">Pilih Mahasiswa</option>
                         @foreach($students as $student)
-                            <option value="{{ $student->id }}" {{ (old('student_id', $siding->student_id ?? $siding->mahasiswa_id) == $student->id) ? 'selected' : '' }}>
+                            <option value="{{ $student->id }}" {{ (old('student_id', $siding->student_id) == $student->id) ? 'selected' : '' }}>
                                 {{ $student->nama }} ({{ $student->nim }})
                             </option>
                         @endforeach
@@ -128,11 +128,23 @@
                     </div>
                 </div>
                 <!-- Pembimbing 2 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pembimbing 2</label>
                         <input type="text" name="pembimbing_2_nama" value="{{ old('pembimbing_2_nama', $siding->pembimbing_2_nama) }}"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pembimbing 2</label>
+                        @if($siding->pembimbing_2_foto)
+                            <div class="mb-2">
+                                <img src="{{ Storage::url($siding->pembimbing_2_foto) }}" alt="Foto Pembimbing 2" class="w-20 h-20 rounded-lg object-cover border border-gray-300">
+                                <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                            </div>
+                        @endif
+                        <input type="file" name="pembimbing_2_foto" accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah foto</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Pembimbing 2</label>
@@ -146,11 +158,23 @@
         <!-- Penguji -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Penguji</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Penguji Ketua</label>
                     <input type="text" name="penguji_ketua_nama" value="{{ old('penguji_ketua_nama', $siding->penguji_ketua_nama) }}"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Foto Penguji Ketua</label>
+                    @if($siding->penguji_ketua_foto)
+                        <div class="mb-2">
+                            <img src="{{ Storage::url($siding->penguji_ketua_foto) }}" alt="Foto Penguji Ketua" class="w-20 h-20 rounded-lg object-cover border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                    @endif
+                    <input type="file" name="penguji_ketua_foto" accept="image/*"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah foto</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Penguji Ketua</label>
@@ -161,6 +185,18 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Penguji Anggota</label>
                     <input type="text" name="penguji_anggota_nama" value="{{ old('penguji_anggota_nama', $siding->penguji_anggota_nama) }}"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Foto Penguji Anggota</label>
+                    @if($siding->penguji_anggota_foto)
+                        <div class="mb-2">
+                            <img src="{{ Storage::url($siding->penguji_anggota_foto) }}" alt="Foto Penguji Anggota" class="w-20 h-20 rounded-lg object-cover border border-gray-300">
+                            <p class="text-xs text-gray-500 mt-1">Foto saat ini</p>
+                        </div>
+                    @endif
+                    <input type="file" name="penguji_anggota_foto" accept="image/*"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah foto</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Penguji Anggota</label>
@@ -234,12 +270,12 @@
 
         <!-- Submit Buttons -->
         <div class="flex items-center justify-end gap-4">
-            <a href="{{ route('admin.yudisium-sidings.show', $siding) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 px-6 rounded-lg transition">
+            <x-button variant="ghost" href="{{ route('admin.yudisium-sidings.show', $siding) }}">
                 Batal
-            </a>
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition shadow-sm hover:shadow">
+            </x-button>
+            <x-button variant="primary" type="submit" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'>
                 Update Data
-            </button>
+            </x-button>
         </div>
     </form>
 </div>
