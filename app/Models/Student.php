@@ -15,6 +15,7 @@ class Student extends Model
         'foto',
         'prodi',
         'tak',
+        'skor_eprt',
         'dosen_wali',
         'pembimbing_1',
         'pembimbing_2',

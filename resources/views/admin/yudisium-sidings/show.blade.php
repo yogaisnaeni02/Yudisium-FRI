@@ -127,20 +127,20 @@
                         <label class="text-sm font-medium text-gray-600 mb-2 block">IPK</label>
                         <p class="text-2xl font-bold text-gray-900">{{ number_format($siding->student->ipk ?? 0, 2) }}</p>
                     </div>
+                    <!-- Total SKS -->
+                    <div>
+                        <label class="text-sm font-medium text-gray-600 mb-2 block">Total SKS</label>
+                        <p class="text-2xl font-bold text-gray-900">{{ $siding->student->total_sks ?? '-' }}</p>
+                    </div>
                     <!-- EPRT -->
                     <div>
-                        <label class="text-sm font-medium text-gray-600 mb-2 block">EPRT</label>
-                        <p class="text-2xl font-bold text-gray-900">{{ $siding->student->total_sks ?? '-' }}</p>
+                    <label class="text-sm font-medium text-gray-600 mb-2 block">Skor EPRT</label>
+                    <p class="text-2xl font-bold text-gray-900">{{ $siding->student->skor_eprt ?? '-' }}</p>
                     </div>
                     <!-- TAK -->
                     <div>
-                        <label class="text-sm font-medium text-gray-600 mb-2 block">TAK</label>
+                        <label class="text-sm font-medium text-gray-600 mb-2 block">Total TAK</label>
                         <p class="text-2xl font-bold text-gray-900">{{ $siding->student->tak ?? '-' }}</p>
-                    </div>
-                    <!-- IKK -->
-                    <div>
-                        <label class="text-sm font-medium text-gray-600 mb-2 block">IKK</label>
-                        <p class="text-2xl font-bold text-gray-900">{{ number_format(($siding->student->tak / 120) * 4, 2) }}</p>
                     </div>
                 </div>
             </div>
@@ -352,7 +352,11 @@
                     <div>
                         <label class="text-sm font-medium text-gray-600 mb-2 block">Tanggal</label>
                         <p class="text-lg text-gray-900">
-                            {{ $siding->tanggal_sidang ? $siding->tanggal_sidang->format('Y-m-d H:i:s') : '-' }}
+                            @if($siding->tanggal_sidang)
+                                {{ $siding->tanggal_sidang->format('Y-m-d H:i') }} WIB
+                            @else
+                                -
+                            @endif
                         </p>
                     </div>
                 </div>

@@ -44,18 +44,12 @@
                     <div class="font-bold text-green-900 text-lg">{{ $student->total_sks }}</div>
                 </div>
                 <div class="p-3 bg-green-50 rounded-lg border border-green-100">
-                    <div class="text-xs text-green-700 mb-1 font-semibold">Total TAK</div>
-                    <div class="font-bold text-green-900 text-lg">{{ $student->tak ?? '-' }}</div>
+                    <div class="text-xs text-green-700 mb-1 font-semibold">Skor EPRT</div>
+                    <div class="font-bold text-green-900 text-lg">{{ $student->skor_eprt ?? '-' }}</div>
                 </div>
                 <div class="p-3 bg-green-50 rounded-lg border border-green-100">
-                    <div class="text-xs text-green-700 mb-1 font-semibold">IKK</div>
-                    <div class="font-bold text-green-900 text-lg">
-                        @if($student->tak)
-                            {{ number_format(($student->tak / 120) * 4, 2) }}
-                        @else
-                            -
-                        @endif
-                    </div>
+                    <div class="text-xs text-green-700 mb-1 font-semibold">Total TAK</div>
+                    <div class="font-bold text-green-900 text-lg">{{ $student->tak ?? '-' }}</div>
                 </div>
             </div>
         </div>

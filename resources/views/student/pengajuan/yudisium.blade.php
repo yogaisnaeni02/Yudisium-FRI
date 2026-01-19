@@ -529,7 +529,7 @@
         const sec = document.querySelector(`.section-content[data-section="${slug}"]`);
         if (sec) {
             sec.classList.remove('hidden');
-            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Removed scrollIntoView to prevent auto-scrolling
         } else {
             console.debug('Section not found for', slug);
         }
@@ -538,9 +538,6 @@
         if (btn) btn.classList.add('ring-2', 'ring-green-400');
     }
 
-    window.addEventListener('load', () => {
-        const firstBtn = document.querySelector('.section-btn');
-        if (firstBtn) firstBtn.click();
-    });
+    // Removed auto-click on page load to prevent auto-scrolling
 </script>
 @endsection

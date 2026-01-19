@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             'tak' => 85,
             'ipk' => 3.75,
             'total_sks' => 144,
+            'skor_eprt' => 560,
             'status_kelulusan' => 'belum_lulus',
             ]
         );
@@ -115,6 +116,7 @@ class DatabaseSeeder extends Seeder
             'tak' => 78,
             'ipk' => 3.50,
             'total_sks' => 144,
+            'skor_eprt' => 510,
             'status_kelulusan' => 'belum_lulus',
             ]
         );

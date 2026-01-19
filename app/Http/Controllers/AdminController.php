@@ -425,10 +425,10 @@ class AdminController extends Controller
             'role' => 'required|in:admin,student',
             // Student fields (conditional)
             'nim' => 'required_if:role,student|nullable|string|max:20|unique:students,nim',
-            'nama' => 'required_if:role,student|nullable|string|max:255',
             'ipk' => 'nullable|numeric|min:0|max:4',
             'total_sks' => 'nullable|integer|min:0',
-            'tak'=>'nullable|numeric|min:0|max:4'
+            'tak' => 'nullable|numeric|min:0',
+            'skor_eprt' => 'nullable|integer|min:310|max:677'
         ]);
 
         // Create user
@@ -444,11 +444,12 @@ class AdminController extends Controller
             Student::create([
                 'user_id' => $user->id,
                 'nim' => $request->nim,
-                'nama' => $request->nama ?? $request->name,
+                'nama' => $request->name,
                 'ipk' => $request->ipk ?? 0,
                 'total_sks' => $request->total_sks ?? 0,
                 'status_kelulusan' => 'belum_lulus',
                 'tak' => $request->tak ?? 0,
+                'skor_eprt' => $request->skor_eprt ?? null,
                 'prodi' => $request->prodi ?? '',
                 'dosen_wali' => '',
                 'pembimbing_1' => '',
@@ -488,11 +489,11 @@ class AdminController extends Controller
             'role' => 'required|in:admin,student',
             // Student fields (conditional)
             'nim' => 'required_if:role,student|nullable|string|max:20|unique:students,nim,' . ($user->student ? $user->student->id : 'NULL') . ',id',
-            'nama' => 'required_if:role,student|nullable|string|max:255',
             'ipk' => 'nullable|numeric|min:0|max:4',
             'total_sks' => 'nullable|integer|min:0',
             'prodi' => 'nullable|string|max:255',
-            'tak' => 'nullable|numeric|min:0|max:4',
+            'tak' => 'nullable|numeric|min:0',
+            'skor_eprt' => 'nullable|integer|min:310|max:677',
             'dosen_wali' => 'nullable|string|max:255',
             'pembimbing_1' => 'nullable|string|max:255',
             'pembimbing_2' => 'nullable|string|max:255',
@@ -520,23 +521,25 @@ class AdminController extends Controller
                 // Update existing student record
                 $user->student->update([
                     'nim' => $request->nim,
-                    'nama' => $request->nama ?? $request->name,
+                    'nama' => $request->name,
                     'ipk' => $request->ipk ?? $user->student->ipk ?? 0,
                     'total_sks' => $request->total_sks ?? $user->student->total_sks ?? 0,
                     'prodi' => $request->prodi ?? $user->student->prodi ?? '',
                     'tak' => $request->tak ?? $user->student->tak ?? 0,
+                    'skor_eprt' => $request->skor_eprt ?? $user->student->skor_eprt ?? null,
                 ]);
             } else {
                 // Create new student record if user was admin before
                 Student::create([
                     'user_id' => $user->id,
                     'nim' => $request->nim,
-                    'nama' => $request->nama ?? $request->name,
+                    'nama' => $request->name,
                     'ipk' => $request->ipk ?? 0,
                     'total_sks' => $request->total_sks ?? 0,
                     'status_kelulusan' => 'belum_lulus',
                     'prodi' => $request->prodi ?? '',
                     'tak' => $request->tak ?? 0,
+                    'skor_eprt' => $request->skor_eprt ?? null,
                     'dosen_wali' => $request->dosen_wali ?? '',
                     'pembimbing_1' => $request->pembimbing_1 ?? '',
                     'pembimbing_2' => $request->pembimbing_2 ?? '',
@@ -640,11 +643,11 @@ class AdminController extends Controller
                     $password = trim($data['password'] ?? 'password123'); // Default password
                     $role = strtolower(trim($data['role'] ?? 'student'));
                     $nim = trim($data['nim'] ?? '');
-                    $nama = trim($data['nama'] ?? $name);
                     $ipk = isset($data['ipk']) && $data['ipk'] !== '' ? floatval($data['ipk']) : 0;
                     $totalSks = isset($data['total_sks']) && $data['total_sks'] !== '' ? intval($data['total_sks']) : 0;
                     $prodi = trim($data['prodi'] ?? '');
                     $tak = isset($data['tak']) && $data['tak'] !== '' ? floatval($data['tak']) : 0;
+                    $skorEprt = isset($data['skor_eprt']) && $data['skor_eprt'] !== '' ? intval($data['skor_eprt']) : null;
                     $dosenWali = trim($data['dosen_wali'] ?? '');
                     $pembimbing_1 = trim($data['pembimbing_1'] ?? '');
                     $pembimbing_2 = trim($data['pembimbing_2'] ?? '');
@@ -701,12 +704,13 @@ class AdminController extends Controller
                             Student::create([
                                 'user_id' => $user->id,
                                 'nim' => $nim,
-                                'nama' => $nama,
+                                'nama' => $name,
                                 'ipk' => $ipk,
                                 'total_sks' => $totalSks,
                                 'status_kelulusan' => 'belum_lulus',
                                 'prodi' => $prodi,
                                 'tak' => $tak,
+                                'skor_eprt' => $skorEprt,
                                 'dosen_wali' => $dosenWali,
                                 'pembimbing_1' => $pembimbing_1,
                                 'pembimbing_2' => $pembimbing_2,
@@ -1201,7 +1205,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'periode_id' => 'required|exists:periodes,id',
-            'tanggal_sidang' => 'required|date',
+            'tanggal_sidang' => 'required|date_format:Y-m-d\TH:i',
             
             // Dosen Wali
             'dosen_wali_nama' => 'nullable|string|max:255',
@@ -1406,7 +1410,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'periode_id' => 'required|exists:periodes,id',
-            'tanggal_sidang' => 'required|date',
+            'tanggal_sidang' => 'required|date_format:Y-m-d\TH:i',
             
             // Dosen Wali
             'dosen_wali_nama' => 'nullable|string|max:255',

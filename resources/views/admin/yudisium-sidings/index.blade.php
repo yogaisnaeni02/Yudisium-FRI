@@ -98,7 +98,7 @@
                                 {{ $siding->periode->nama ?? '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {{ $siding->tanggal_sidang ? $siding->tanggal_sidang->format('d M Y') : '-' }}
+                                {{ $siding->tanggal_sidang ? $siding->tanggal_sidang->format('d M Y, H:i') : '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
                                 @if($siding->nilai_total)

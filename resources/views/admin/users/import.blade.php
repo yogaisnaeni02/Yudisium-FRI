@@ -34,7 +34,7 @@
             <p class="text-sm text-blue-800 mb-4">File CSV harus memiliki header dengan kolom berikut:</p>
             <div class="bg-white p-4 rounded-lg border border-blue-200 mb-4">
                 <code class="text-sm text-gray-800">
-                name,email,password,role,nim,nama,prodi,tak,dosen_wali,pembimbing_1,pembimbing_2,penguji_ketua,penguji_anggota,ipk,total_sks
+                name,email,password,role,nim,prodi,tak,skor_eprt,dosen_wali,pembimbing_1,pembimbing_2,penguji_ketua,penguji_anggota,ipk,total_sks
                 </code>
             </div>
             <div class="space-y-2 text-sm text-blue-800">
@@ -48,11 +48,11 @@
                 <ul class="list-disc list-inside ml-4 space-y-1">
                     <li><code class="bg-blue-100 px-1 rounded">password</code> - Password (default: password123 jika kosong)</li>
                     <li><code class="bg-blue-100 px-1 rounded">nim</code> - NIM mahasiswa (wajib jika role = student)</li>
-                    <li><code class="bg-blue-100 px-1 rounded">nama</code> - Nama mahasiswa (default: sama dengan name)</li>
                     <li><code class="bg-blue-100 px-1 rounded">ipk</code> - IPK (default: 0)</li>
                     <li><code class="bg-blue-100 px-1 rounded">total_sks</code> - Total SKS (default: 0)</li>
                     <li><code class="bg-blue-100 px-1 rounded">prodi</code> - Program studi mahasiswa</li>
                     <li><code class="bg-blue-100 px-1 rounded">tak</code> - Total AK / TAK mahasiswa</li>
+                    <li><code class="bg-blue-100 px-1 rounded">skor_eprt</code> - Skor EPRT (310-677)</li>
                     <li><code class="bg-blue-100 px-1 rounded">dosen_wali</code> - Nama dosen wali</li>
                     <li><code class="bg-blue-100 px-1 rounded">pembimbing_1</code> - Nama pembimbing 1</li>
                     <li><code class="bg-blue-100 px-1 rounded">pembimbing_2</code> - Nama pembimbing 2</li>
@@ -71,10 +71,10 @@
                 Contoh Format CSV
             </h3>
             <div class="bg-white p-4 rounded border border-gray-300 overflow-x-auto">
-                <pre class="text-xs text-gray-700">name,email,password,role,nim,nama,prodi,tak,dosen_wali,pembimbing_1,pembimbing_2,penguji_ketua,penguji_anggota,ipk,total_sks
-John Doe,john@example.com,password123,student,123456789,John Doe,Sistem Informasi,120,Dr. Andi,Dr. Budi,Dr. Citra,Dr. Dedi,3.75,144
-Jane Smith,jane@example.com,password123,student,987654321,Jane Smith,Informatika,115,Dr. Rina,Dr. Agus,,Dr. Rudi,3.80,144
-Admin User,admin@example.com,password123,admin,,,,,,,,,,,
+                <pre class="text-xs text-gray-700">name,email,password,role,nim,prodi,tak,skor_eprt,dosen_wali,pembimbing_1,pembimbing_2,penguji_ketua,penguji_anggota,ipk,total_sks
+John Doe,john@example.com,password123,student,123456789,Sistem Informasi,120,3.50,Dr. Andi,Dr. Budi,Dr. Citra,Dr. Dedi,Dr. Eka,3.75,144
+Jane Smith,jane@example.com,password123,student,987654321,Informatika,115,3.60,Dr. Rina,Dr. Agus,,Dr. Rudi,Dr. Sari,3.80,144
+Admin User,admin@example.com,password123,admin,,,,,,,,,,,,
 </pre>
             </div>
             <p class="text-xs text-gray-600 mt-3 flex items-start gap-1">

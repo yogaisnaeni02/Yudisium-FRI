@@ -193,6 +193,13 @@ class StudentController extends Controller
                 }
             }
 
+            // Set submitted_at if this is the first document upload or if submitted_at is null
+            if (!$submission->submitted_at && count($results) > 0) {
+                $submission->update([
+                    'submitted_at' => now(),
+                ]);
+            }
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -264,6 +271,13 @@ class StudentController extends Controller
 
             \App\Models\Activity::log('upload', 'Mengunggah dokumen: ' . $request->document_type, 'Document', $newDocument->id);
             $document = $newDocument;
+        }
+
+        // Set submitted_at if this is the first document upload or if submitted_at is null
+        if (!$submission->submitted_at) {
+            $submission->update([
+                'submitted_at' => now(),
+            ]);
         }
 
         // Return JSON for AJAX requests

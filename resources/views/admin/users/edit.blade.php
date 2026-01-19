@@ -122,17 +122,6 @@
                     </div>
 
                     <div>
-                        <x-input-label for="nama" :value="__('Nama Mahasiswa')" class="text-gray-700 font-semibold mb-2" />
-                        <x-text-input id="nama" 
-                            class="block mt-1 w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg" 
-                            type="text" 
-                            name="nama" 
-                            :value="old('nama', $user->student->nama ?? '')"
-                            placeholder="Nama mahasiswa" />
-                        <x-input-error :messages="$errors->get('nama')" class="mt-2" />
-                    </div>
-
-                    <div>
                         <x-input-label for="prodi" :value="__('Program Studi')" class="text-gray-700 font-semibold mb-2" />
                         <x-text-input id="prodi" 
                             class="block mt-1 w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg" 
@@ -168,6 +157,19 @@
                             placeholder="144" />
                         <x-input-error :messages="$errors->get('total_sks')" class="mt-2" />
                     </div>
+                    
+                    <div>
+                        <x-input-label for="skor_eprt" :value="__('Skor EPRT')" class="text-gray-700 font-semibold mb-2" />
+                        <x-text-input id="skor_eprt" 
+                            class="block mt-1 w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg" 
+                            type="number" 
+                            name="skor_eprt" 
+                            min="310"
+                            max="677"
+                            :value="old('skor_eprt', $user->student->skor_eprt ?? '')"
+                            placeholder="Skor EPRT (310-677)" />
+                        <x-input-error :messages="$errors->get('skor_eprt')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="tak" :value="__('Total TAK')" class="text-gray-700 font-semibold mb-2" />
@@ -201,16 +203,13 @@
         const studentRole = document.querySelector('input[name="role"][value="student"]');
         const studentFields = document.getElementById('student-fields');
         const nimField = document.getElementById('nim');
-        const namaField = document.getElementById('nama');
         
         if (studentRole.checked) {
             studentFields.classList.remove('hidden');
             nimField.setAttribute('required', 'required');
-            namaField.setAttribute('required', 'required');
         } else {
             studentFields.classList.add('hidden');
             nimField.removeAttribute('required');
-            namaField.removeAttribute('required');
         }
     }
 
@@ -222,7 +221,7 @@
         }
         
         // Auto-show student fields if there are student field errors
-        @if($errors->has('nim') || $errors->has('nama'))
+        @if($errors->has('nim'))
             if (!studentRole.checked) {
                 studentRole.click();
             }

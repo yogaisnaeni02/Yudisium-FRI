@@ -463,20 +463,20 @@
                     </div>
                     <div class="academic-cell">
                         <div class="academic-card">
-                            <div class="academic-label">EPRT</div>
+                            <div class="academic-label">Total SKS</div>
                             <div class="academic-value">{{ $siding->student->total_sks ?? '-' }}</div>
                         </div>
                     </div>
                     <div class="academic-cell">
                         <div class="academic-card">
-                            <div class="academic-label">TAK</div>
-                            <div class="academic-value">{{ $siding->student->tak ?? '-' }}</div>
+                            <div class="academic-label">Skor EPRT</div>
+                            <div class="academic-value">{{ $siding->student->skor_eprt ?? '-' }}</div>
                         </div>
                     </div>
                     <div class="academic-cell">
                         <div class="academic-card">
-                            <div class="academic-label">IKK</div>
-                            <div class="academic-value">{{ number_format(($siding->student->tak ?? 0) / 120 * 4, 2) }}</div>
+                            <div class="academic-label">Total TAK</div>
+                            <div class="academic-value">{{ $siding->student->tak ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
@@ -614,7 +614,11 @@
                 <div class="info-box">
                     <div class="info-box-label">Tanggal Sidang</div>
                     <div class="info-box-value" style="font-weight: bold;">
-                        {{ $siding->tanggal_sidang ? $siding->tanggal_sidang->format('d M Y, H:i') : '-' }}
+                        @if($siding->tanggal_sidang)
+                            {{ $siding->tanggal_sidang->format('d M Y, H:i') }} WIB
+                        @else
+                            -
+                        @endif
                     </div>
                 </div>
                 
@@ -631,7 +635,7 @@
     <!-- Footer -->
     <div class="footer">
         <p><strong>Sistem Informasi Yudisium</strong> | Fakultas Rekayasa Industri - Telkom University</p>
-        <p>Dokumen dihasilkan otomatis pada {{ date('d M Y, H:i:s') }}</p>
+        <p>Dokumen dihasilkan otomatis pada {{ now()->format('d M Y, H:i') }} WIB</p>
     </div>
 </body>
 </html>
