@@ -76,8 +76,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Dosen Wali</label>
-                    <input type="text" name="dosen_wali_nama" value="{{ old('dosen_wali_nama') }}"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <select name="dosen_wali_nama" id="dosen_wali_nama" class="w-full">
+                        <option value="">Pilih Dosen Wali</option>
+                        @foreach($dosens as $dosen)
+                            <option value="{{ $dosen->nama_dosen }}" {{ old('dosen_wali_nama') == $dosen->nama_dosen ? 'selected' : '' }}>
+                                {{ $dosen->nama_dosen }} - {{ $dosen->kode_dosen }} ({{ $dosen->prodi }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Foto Dosen Wali</label>
@@ -95,8 +101,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pembimbing 1</label>
-                        <input type="text" name="pembimbing_1_nama" value="{{ old('pembimbing_1_nama') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <select name="pembimbing_1_nama" id="pembimbing_1_nama" class="w-full">
+                            <option value="">Pilih Pembimbing 1</option>
+                            @foreach($dosens as $dosen)
+                                <option value="{{ $dosen->nama_dosen }}" {{ old('pembimbing_1_nama') == $dosen->nama_dosen ? 'selected' : '' }}>
+                                    {{ $dosen->nama_dosen }} - {{ $dosen->kode_dosen }} ({{ $dosen->prodi }})
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pembimbing 1</label>
@@ -113,8 +125,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pembimbing 2</label>
-                        <input type="text" name="pembimbing_2_nama" value="{{ old('pembimbing_2_nama') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <select name="pembimbing_2_nama" id="pembimbing_2_nama" class="w-full">
+                            <option value="">Pilih Pembimbing 2</option>
+                            @foreach($dosens as $dosen)
+                                <option value="{{ $dosen->nama_dosen }}" {{ old('pembimbing_2_nama') == $dosen->nama_dosen ? 'selected' : '' }}>
+                                    {{ $dosen->nama_dosen }} - {{ $dosen->kode_dosen }} ({{ $dosen->prodi }})
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pembimbing 2</label>
@@ -136,8 +154,14 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Penguji Ketua</label>
-                    <input type="text" name="penguji_ketua_nama" value="{{ old('penguji_ketua_nama') }}"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <select name="penguji_ketua_nama" id="penguji_ketua_nama" class="w-full">
+                        <option value="">Pilih Penguji Ketua</option>
+                        @foreach($dosens as $dosen)
+                            <option value="{{ $dosen->nama_dosen }}" {{ old('penguji_ketua_nama') == $dosen->nama_dosen ? 'selected' : '' }}>
+                                {{ $dosen->nama_dosen }} - {{ $dosen->kode_dosen }} ({{ $dosen->prodi }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Foto Penguji Ketua</label>
@@ -151,8 +175,14 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Penguji Anggota</label>
-                    <input type="text" name="penguji_anggota_nama" value="{{ old('penguji_anggota_nama') }}"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <select name="penguji_anggota_nama" id="penguji_anggota_nama" class="w-full">
+                        <option value="">Pilih Penguji Anggota</option>
+                        @foreach($dosens as $dosen)
+                            <option value="{{ $dosen->nama_dosen }}" {{ old('penguji_anggota_nama') == $dosen->nama_dosen ? 'selected' : '' }}>
+                                {{ $dosen->nama_dosen }} - {{ $dosen->kode_dosen }} ({{ $dosen->prodi }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Foto Penguji Anggota</label>
@@ -240,4 +270,70 @@
         </div>
     </form>
 </div>
+
+<!-- Tom Select CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<style>
+.ts-wrapper.single .ts-control {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    min-height: 42px;
+}
+.ts-wrapper.single .ts-control:focus {
+    border-color: #10b981;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+.ts-dropdown {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.ts-dropdown .option {
+    padding: 0.5rem 1rem;
+}
+.ts-dropdown .option.active {
+    background-color: #10b981;
+    color: white;
+}
+</style>
+<!-- Tom Select JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Tom Select for all dosen dropdowns
+    const dosenFields = [
+        'dosen_wali_nama',
+        'pembimbing_1_nama',
+        'pembimbing_2_nama',
+        'penguji_ketua_nama',
+        'penguji_anggota_nama'
+    ];
+
+    dosenFields.forEach(fieldId => {
+        const select = document.getElementById(fieldId);
+        if (select) {
+            new TomSelect(select, {
+                placeholder: 'Cari atau pilih dosen...',
+                allowEmptyOption: true,
+                create: false,
+                sortField: {
+                    field: 'text',
+                    direction: 'asc'
+                },
+                plugins: ['clear_button'],
+                render: {
+                    option: function(data, escape) {
+                        return '<div class="flex items-center justify-between py-2">' +
+                               '<span class="font-medium">' + escape(data.text) + '</span>' +
+                               '</div>';
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
 @endsection

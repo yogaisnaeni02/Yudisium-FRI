@@ -139,13 +139,16 @@
                                                 @php
                                                     $slug = \Illuminate\Support\Str::slug($type);
                                                     $doc = $documents->where('type', $type)->first();
+                                                    // Disable input jika dokumen sudah ada dan status bukan rejected/revision
                                                     $inputDisabled = $doc && ($doc->status === 'pending' || $doc->status === 'approved');
-                                                    if (!$inputDisabled) { $allDisabled = false; }
+                                                    // Allow replace jika rejected atau revision
+                                                    $canReplace = $doc && ($doc->status === 'rejected' || $doc->status === 'revision');
+                                                    if (!$inputDisabled && !$canReplace) { $allDisabled = false; }
                                                 @endphp
                                                 <div class="p-4 bg-white rounded-lg border border-green-200 hover:border-green-300 transition">
                                                     <div class="flex items-center justify-between mb-3">
                                                         <p class="text-sm font-semibold text-gray-900">{{ $type }}</p>
-                                                        @if($doc && $submission->status === 'draft')
+                                                        @if($canReplace && $submission->status === 'draft')
                                                             <button type="button" onclick="toggleReplaceForm('{{ $slug }}')" id="replace-toggle-{{ $slug }}" class="text-xs text-green-600 hover:text-green-800 font-medium">
                                                                 [Ganti File]
                                                             </button>
@@ -212,31 +215,36 @@
                                                         </div>
                                                     @endif
 
-                                                    <p class="text-xs text-gray-500 mb-3">Format: PDF/DOC/DOCX | Maks. 5MB per file</p>
+                                                    <p class="text-xs text-gray-500 mb-3">Format: PDF/DOC/DOCX | Maks. 5MB | 1 file per dokumen</p>
 
                                                     <!-- Hidden by default if document exists and not replacing -->
-                                                    <div id="upload-form-{{ $slug }}" style="display: {{ ($doc && $submission->status === 'draft' && $doc->status === 'rejected') ? 'none' : 'block' }};">
-                                                        <label class="block text-xs font-medium text-gray-700 mb-2">Pilih File (boleh banyak)</label>
-                                                        <input type="file" name="files[{{ $slug }}][]" multiple accept=".pdf,.doc,.docx" class="w-full text-sm text-gray-700" onchange="validateAndPreviewFiles(this, '{{ $slug }}')" @if($inputDisabled) disabled @endif>
+                                                    <div id="upload-form-{{ $slug }}" style="display: {{ ($canReplace && $submission->status === 'draft') ? 'none' : 'block' }};">
+                                                        <label class="block text-xs font-medium text-gray-700 mb-2">Pilih File</label>
+                                                        <input type="file" name="files[{{ $slug }}]" accept=".pdf,.doc,.docx" class="w-full text-sm text-gray-700" onchange="validateAndPreviewSingleFile(this, '{{ $slug }}')" @if($inputDisabled) disabled @endif>
                                                         <!-- File preview & validation warnings -->
                                                         <div class="mt-2 file-preview-{{ $slug }}" style="display: none;">
                                                             <div class="text-xs font-semibold text-gray-700 mb-2">File yang dipilih:</div>
-                                                            <ul class="file-list-{{ $slug }} space-y-1 text-xs"></ul>
+                                                            <div class="file-list-{{ $slug }} text-xs"></div>
                                                             <div class="file-warnings-{{ $slug }} mt-2 space-y-1"></div>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Replace form (shown by default for rejected) -->
-                                                    @if($doc && $submission->status === 'draft' && $doc->status === 'rejected')
+                                                    <!-- Replace form (shown by default for rejected/revision) -->
+                                                    @if($canReplace && $submission->status === 'draft')
                                                         <div id="replace-form-{{ $slug }}" style="display: block;" class="space-y-2">
-                                                            <p class="text-xs text-orange-700 mb-2">Pilih file baru untuk mengganti <strong>{{ $doc->name }}</strong></p>
-                                                            <input type="file" name="files[{{ $slug }}][]" accept=".pdf,.doc,.docx" class="w-full text-sm text-gray-700" onchange="validateAndPreviewFiles(this, '{{ $slug }}')">
+                                                            <p class="text-xs text-orange-700 mb-2">
+                                                                @if($doc->status === 'rejected')
+                                                                    File ditolak. Pilih file baru untuk mengganti <strong>{{ $doc->name }}</strong>
+                                                                @elseif($doc->status === 'revision')
+                                                                    File perlu revisi. Pilih file baru untuk mengganti <strong>{{ $doc->name }}</strong>
+                                                                @endif
+                                                            </p>
+                                                            <input type="file" name="files[{{ $slug }}]" accept=".pdf,.doc,.docx" class="w-full text-sm text-gray-700" onchange="validateAndPreviewSingleFile(this, '{{ $slug }}')">
                                                             <div class="mt-2 file-preview-{{ $slug }}" style="display: none;">
                                                                 <div class="text-xs font-semibold text-gray-700 mb-2">File yang dipilih:</div>
-                                                                <ul class="file-list-{{ $slug }} space-y-1 text-xs"></ul>
+                                                                <div class="file-list-{{ $slug }} text-xs"></div>
                                                                 <div class="file-warnings-{{ $slug }} mt-2 space-y-1"></div>
                                                             </div>
-                                                            <p class="text-xs text-gray-600 mt-2">Upload bersama file lain menggunakan tombol di bawah</p>
                                                         </div>
                                                     @endif
                                                 </div>
@@ -260,23 +268,6 @@
         </div>
     </div>
 
-    <!-- Submit Section -->
-    @if($submission->status === 'draft' && $documents->count() > 0)
-    <div class="mt-8 bg-gradient-to-r from-green-50 to-white rounded-xl shadow-sm border border-green-200 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-bold text-green-900 mb-2">Siap untuk Mengirim Pengajuan?</h3>
-                <p class="text-sm text-gray-600">Pastikan semua dokumen telah diunggah dengan lengkap sebelum mengirim</p>
-            </div>
-            <form action="{{ route('student.submit-application') }}" method="POST">
-                @csrf
-                <x-button variant="success" size="lg" type="submit" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'>
-                    Kirim Pengajuan Yudisium
-                </x-button>
-            </form>
-        </div>
-    </div>
-    @endif
 </div>
 
 <!-- Upload JS handlers -->
@@ -300,16 +291,21 @@
         }
     }
 
+    // Legacy function - redirect to single file function
     function validateAndPreviewFiles(inputElement, slug) {
-        const files = Array.from(inputElement.files);
-        const previewDiv = document.querySelector(`.file-preview-${slug}`);
+        validateAndPreviewSingleFile(inputElement, slug);
+    }
+    
+    function validateAndPreviewSingleFile(input, slug) {
+        const file = input.files[0];
         const fileListDiv = document.querySelector(`.file-list-${slug}`);
         const warningsDiv = document.querySelector(`.file-warnings-${slug}`);
+        const previewDiv = document.querySelector(`.file-preview-${slug}`);
 
         fileListDiv.innerHTML = '';
         warningsDiv.innerHTML = '';
 
-        if (files.length === 0) {
+        if (!file) {
             previewDiv.style.display = 'none';
             return;
         }
@@ -317,57 +313,52 @@
         previewDiv.style.display = 'block';
         let hasWarnings = false;
 
-        files.forEach((file, idx) => {
-            const fileExt = file.name.split('.').pop().toLowerCase();
-            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        
+        let statusIcon = '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        let isValid = true;
+
+        // Check type
+        if (!ALLOWED_TYPES.includes(fileExt)) {
+            statusIcon = '<svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            isValid = false;
+            hasWarnings = true;
+        }
+        // Check size
+        else if (file.size > MAX_FILE_SIZE) {
+            statusIcon = '<svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+            isValid = false;
+            hasWarnings = true;
+        }
+
+        const fileItem = document.createElement('div');
+        fileItem.className = 'flex items-center gap-2 p-2 bg-gray-100 rounded';
+        fileItem.innerHTML = `
+            <span>${statusIcon}</span>
+            <span class="flex-1 truncate">${file.name}</span>
+            <span class="text-gray-500">${fileSizeMB}MB</span>
+        `;
+        fileListDiv.appendChild(fileItem);
+
+        // Add warnings
+        if (!isValid) {
+            const warning = document.createElement('div');
+            warning.className = 'p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs';
+            let msg = `<strong>${file.name}:</strong> `;
             
-            let statusIcon = '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
-            let isValid = true;
-
-            // Check type
             if (!ALLOWED_TYPES.includes(fileExt)) {
-                statusIcon = '<svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-                isValid = false;
-                hasWarnings = true;
+                msg += `Format tidak diterima (hanya PDF/DOC/DOCX)`;
+            } else if (file.size > MAX_FILE_SIZE) {
+                msg += `Ukuran file melebihi 5MB`;
             }
-            // Check size
-            else if (file.size > MAX_FILE_SIZE) {
-                statusIcon = '<svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
-                isValid = false;
-                hasWarnings = true;
-            }
-
-            const fileItem = document.createElement('li');
-            fileItem.className = 'flex items-center gap-2 p-2 bg-gray-100 rounded';
-            fileItem.innerHTML = `
-                <span>${statusIcon}</span>
-                <span class="flex-1 truncate">${file.name}</span>
-                <span class="text-gray-500">${fileSizeMB}MB</span>
-            `;
-            fileListDiv.appendChild(fileItem);
-
-            // Add warnings
-            if (!isValid) {
-                const warning = document.createElement('div');
-                warning.className = 'p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800';
-                let msg = `<strong>${file.name}:</strong> `;
-                
-                if (!ALLOWED_TYPES.includes(fileExt)) {
-                    msg += `Format tidak diterima (hanya PDF/DOC/DOCX)`;
-                } else if (file.size > MAX_FILE_SIZE) {
-                    msg += `Ukuran file melebihi 5MB`;
-                }
-                
-                warning.innerHTML = msg;
-                warningsDiv.appendChild(warning);
-            }
-        });
-
-        // Show summary
-        if (files.length > 0) {
+            
+            warning.innerHTML = msg;
+            warningsDiv.appendChild(warning);
+        } else {
             const summary = document.createElement('div');
-            summary.className = `mt-2 p-2 rounded text-xs ${hasWarnings ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'}`;
-            summary.innerHTML = `${files.length} file dipilih ${hasWarnings ? '(ada peringatan)' : '(siap diunggah)'}`;
+            summary.className = 'mt-2 p-2 rounded text-xs bg-green-50 text-green-700';
+            summary.innerHTML = `File siap diunggah`;
             warningsDiv.appendChild(summary);
         }
     }
@@ -383,10 +374,10 @@
         formData.append('_token', '{{ csrf_token() }}');
         formData.append('group_name', document.querySelector(`#group-${groupSlug} input[name="group_name"]`).value);
 
-        // Add only the files for this specific document type
-        Array.from(fileInput.files).forEach(file => {
-            formData.append(`files[${slug}][]`, file);
-        });
+        // Add only the single file for this specific document type
+        if (fileInput.files[0]) {
+            formData.append(`files[${slug}]`, fileInput.files[0]);
+        }
 
         const btn = event.target;
         const originalText = btn.textContent;
@@ -414,12 +405,16 @@
                 alert.innerHTML = `<p class="text-green-700 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><strong>Sukses!</strong> ${count} file berhasil diunggah.</p>`;
                 const section = document.querySelector(`#group-${groupSlug} .p-6`);
                 section.insertBefore(alert, section.firstChild);
-                setTimeout(() => alert.remove(), 4000);
-
+                
                 // Reset this specific input and preview
                 fileInput.value = '';
                 const previewDiv = document.querySelector(`.file-preview-${slug}`);
                 if (previewDiv) previewDiv.style.display = 'none';
+                
+                // Reload page after 1 second to show updated documents
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 const alert = document.createElement('div');
                 alert.className = 'p-4 mb-4 bg-red-50 border border-red-200 rounded-lg';

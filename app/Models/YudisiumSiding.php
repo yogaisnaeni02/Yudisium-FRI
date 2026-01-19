@@ -11,7 +11,6 @@ class YudisiumSiding extends Model
         'periode_id',
         'student_id',
         'tanggal_sidang',
-        'predikat',
         'predikat_yudisium',
         // Dosen Wali
         'dosen_wali_nama',

@@ -78,9 +78,21 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/yudisium-sidings/create', [AdminController::class, 'createYudisiumSiding'])->name('yudisium-sidings.create');
     Route::post('/yudisium-sidings', [AdminController::class, 'storeYudisiumSiding'])->name('yudisium-sidings.store');
     Route::get('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'showYudisiumSiding'])->name('yudisium-sidings.show');
+    Route::get('/yudisium-sidings/{yudisiumSiding}/export-pdf', [AdminController::class, 'exportYudisiumSidingPDF'])->name('yudisium-sidings.export-pdf');
     Route::get('/yudisium-sidings/{yudisiumSiding}/edit', [AdminController::class, 'editYudisiumSiding'])->name('yudisium-sidings.edit');
     Route::patch('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'updateYudisiumSiding'])->name('yudisium-sidings.update');
     Route::delete('/yudisium-sidings/{yudisiumSiding}', [AdminController::class, 'deleteYudisiumSiding'])->name('yudisium-sidings.delete');
+
+    // Dosen Management
+    Route::get('/dosens', [AdminController::class, 'dosens'])->name('dosens');
+    Route::get('/dosens/export', [AdminController::class, 'exportDosens'])->name('dosens.export');
+    Route::get('/dosens/import', [AdminController::class, 'showImportDosens'])->name('dosens.import');
+    Route::post('/dosens/import', [AdminController::class, 'importDosens'])->name('dosens.import.store');
+    Route::get('/dosens/create', [AdminController::class, 'createDosen'])->name('dosens.create');
+    Route::post('/dosens', [AdminController::class, 'storeDosen'])->name('dosens.store');
+    Route::get('/dosens/{dosen}/edit', [AdminController::class, 'editDosen'])->name('dosens.edit');
+    Route::put('/dosens/{dosen}', [AdminController::class, 'updateDosen'])->name('dosens.update');
+    Route::delete('/dosens/{dosen}', [AdminController::class, 'deleteDosen'])->name('dosens.delete');
 });
 
 Route::middleware('auth')->group(function () {

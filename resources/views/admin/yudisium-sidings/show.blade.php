@@ -19,6 +19,9 @@
             Kembali
         </x-button>
         <div class="flex gap-2">
+            <x-button variant="success" href="{{ route('admin.yudisium-sidings.export-pdf', $siding) }}" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'>
+                Export PDF
+            </x-button>
             <x-button variant="primary" href="{{ route('admin.yudisium-sidings.edit', $siding) }}" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>'>
                 Edit
             </x-button>
@@ -109,6 +112,14 @@
                                 </div>
                             @endif
                             <p class="text-sm font-medium text-gray-900 text-center">{{ $siding->dosen_wali_nama ?? '-' }}</p>
+                            @if($siding->dosen_wali_nama)
+                                @php
+                                    $dosenWali = \App\Models\Dosen::where('nama_dosen', $siding->dosen_wali_nama)->first();
+                                @endphp
+                                @if($dosenWali)
+                                    <p class="text-xs text-gray-500 text-center mt-1">NIP: {{ $dosenWali->nip }}</p>
+                                @endif
+                            @endif
                         </div>
                     </div>
                     <!-- IPK -->
@@ -172,6 +183,14 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Pembimbing 1</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->pembimbing_1_nama ?? '-' }}</p>
+                                @if($siding->pembimbing_1_nama)
+                                    @php
+                                        $pembimbing1 = \App\Models\Dosen::where('nama_dosen', $siding->pembimbing_1_nama)->first();
+                                    @endphp
+                                    @if($pembimbing1)
+                                        <p class="text-xs text-gray-500 mt-1">NIP: {{ $pembimbing1->nip }}</p>
+                                    @endif
+                                @endif
                             </div>
                             <div class="text-right">
                                 <p class="text-2xl font-bold text-green-600">{{ $siding->pembimbing_1_nilai ? number_format($siding->pembimbing_1_nilai, 2) : '-' }}</p>
@@ -194,6 +213,14 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Pembimbing 2</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->pembimbing_2_nama ?? '-' }}</p>
+                                @if($siding->pembimbing_2_nama)
+                                    @php
+                                        $pembimbing2 = \App\Models\Dosen::where('nama_dosen', $siding->pembimbing_2_nama)->first();
+                                    @endphp
+                                    @if($pembimbing2)
+                                        <p class="text-xs text-gray-500 mt-1">NIP: {{ $pembimbing2->nip }}</p>
+                                    @endif
+                                @endif
                             </div>
                             <div class="text-right">
                                 <p class="text-2xl font-bold text-green-600">{{ $siding->pembimbing_2_nilai ? number_format($siding->pembimbing_2_nilai, 2) : '-' }}</p>
@@ -216,6 +243,14 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Penguji Ketua</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->penguji_ketua_nama ?? '-' }}</p>
+                                @if($siding->penguji_ketua_nama)
+                                    @php
+                                        $pengujiKetua = \App\Models\Dosen::where('nama_dosen', $siding->penguji_ketua_nama)->first();
+                                    @endphp
+                                    @if($pengujiKetua)
+                                        <p class="text-xs text-gray-500 mt-1">NIP: {{ $pengujiKetua->nip }}</p>
+                                    @endif
+                                @endif
                             </div>
                             <div class="text-right">
                                 <p class="text-2xl font-bold text-green-600">{{ $siding->penguji_ketua_nilai ? number_format($siding->penguji_ketua_nilai, 2) : '-' }}</p>
@@ -238,6 +273,14 @@
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-600">Penguji Anggota</p>
                                 <p class="text-sm font-semibold text-gray-900">{{ $siding->penguji_anggota_nama ?? '-' }}</p>
+                                @if($siding->penguji_anggota_nama)
+                                    @php
+                                        $pengujiAnggota = \App\Models\Dosen::where('nama_dosen', $siding->penguji_anggota_nama)->first();
+                                    @endphp
+                                    @if($pengujiAnggota)
+                                        <p class="text-xs text-gray-500 mt-1">NIP: {{ $pengujiAnggota->nip }}</p>
+                                    @endif
+                                @endif
                             </div>
                             <div class="text-right">
                                 <p class="text-2xl font-bold text-green-600">{{ $siding->penguji_anggota_nilai ? number_format($siding->penguji_anggota_nilai, 2) : '-' }}</p>

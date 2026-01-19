@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Article;
 use App\Models\Periode;
 use App\Models\YudisiumSiding;
+use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -1102,7 +1103,6 @@ class AdminController extends Controller
             'periode_id'       => $submission->periode_id,
             'student_id'     => $submission->student_id,
             'tanggal_sidang'   => now(),
-            'predikat'         => $yudisiumResult->predikat_kelulusan,
             'predikat_yudisium'=> $predikatYudisium,
             'status_cumlaude'  => $statusCumlaude,
             'status_yudisium'  => 'pending',
@@ -1184,10 +1184,12 @@ class AdminController extends Controller
     {
         $students = Student::with('user')->orderBy('nama')->get();
         $periodes = Periode::where('status', 'active')->orderBy('nama', 'desc')->get();
+        $dosens = Dosen::orderBy('nama_dosen')->get();
 
         return view('admin.yudisium-sidings.create', [
             'students' => $students,
             'periodes' => $periodes,
+            'dosens' => $dosens,
         ]);
     }
 
@@ -1289,17 +1291,110 @@ class AdminController extends Controller
     }
 
     /**
+     * Export yudisium siding detail to PDF.
+     */
+    public function exportYudisiumSidingPDF(YudisiumSiding $yudisiumSiding)
+    {
+        $yudisiumSiding->load(['student.user', 'periode']);
+
+        // Get dosen data for NIP
+        $dosens = [];
+        if ($yudisiumSiding->dosen_wali_nama) {
+            $dosens['dosen_wali'] = Dosen::where('nama_dosen', $yudisiumSiding->dosen_wali_nama)->first();
+        }
+        if ($yudisiumSiding->pembimbing_1_nama) {
+            $dosens['pembimbing_1'] = Dosen::where('nama_dosen', $yudisiumSiding->pembimbing_1_nama)->first();
+        }
+        if ($yudisiumSiding->pembimbing_2_nama) {
+            $dosens['pembimbing_2'] = Dosen::where('nama_dosen', $yudisiumSiding->pembimbing_2_nama)->first();
+        }
+        if ($yudisiumSiding->penguji_ketua_nama) {
+            $dosens['penguji_ketua'] = Dosen::where('nama_dosen', $yudisiumSiding->penguji_ketua_nama)->first();
+        }
+        if ($yudisiumSiding->penguji_anggota_nama) {
+            $dosens['penguji_anggota'] = Dosen::where('nama_dosen', $yudisiumSiding->penguji_anggota_nama)->first();
+        }
+
+        // Convert image paths to base64 for PDF
+        $imagePaths = [];
+        
+        // Helper function to convert image to base64
+        $getImageBase64 = function($path, $disk = 'public') {
+            if (!$path) return null;
+            
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    $imageData = Storage::disk($disk)->get($path);
+                    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                    $mimeType = 'image/jpeg';
+                    if ($extension === 'png') $mimeType = 'image/png';
+                    if ($extension === 'gif') $mimeType = 'image/gif';
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error loading image for PDF: ' . $e->getMessage());
+            }
+            return null;
+        };
+        
+        if ($yudisiumSiding->dosen_wali_foto) {
+            $imagePaths['dosen_wali'] = $getImageBase64($yudisiumSiding->dosen_wali_foto);
+        }
+        if ($yudisiumSiding->pembimbing_1_foto) {
+            $imagePaths['pembimbing_1'] = $getImageBase64($yudisiumSiding->pembimbing_1_foto);
+        }
+        if ($yudisiumSiding->pembimbing_2_foto) {
+            $imagePaths['pembimbing_2'] = $getImageBase64($yudisiumSiding->pembimbing_2_foto);
+        }
+        if ($yudisiumSiding->penguji_ketua_foto) {
+            $imagePaths['penguji_ketua'] = $getImageBase64($yudisiumSiding->penguji_ketua_foto);
+        }
+        if ($yudisiumSiding->penguji_anggota_foto) {
+            $imagePaths['penguji_anggota'] = $getImageBase64($yudisiumSiding->penguji_anggota_foto);
+        }
+        if ($yudisiumSiding->student->foto) {
+            $imagePaths['student'] = $getImageBase64($yudisiumSiding->student->foto);
+        }
+
+        // Render PDF view
+        $html = view('admin.yudisium-sidings.pdf', [
+            'siding' => $yudisiumSiding,
+            'dosens' => $dosens,
+            'imagePaths' => $imagePaths,
+        ])->render();
+
+        // Configure DomPDF
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'Arial');
+        $options->set('chroot', public_path());
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Generate filename
+        $filename = 'Sidang_Yudisium_' . $yudisiumSiding->student->nim . '_' . date('Y-m-d') . '.pdf';
+
+        return $dompdf->stream($filename);
+    }
+
+    /**
      * Show edit yudisium siding form.
      */
     public function editYudisiumSiding(YudisiumSiding $yudisiumSiding): View
     {
         $students = Student::with('user')->orderBy('nama')->get();
         $periodes = Periode::where('status', 'active')->orderBy('nama', 'desc')->get();
+        $dosens = Dosen::orderBy('nama_dosen')->get();
 
         return view('admin.yudisium-sidings.edit', [
             'siding' => $yudisiumSiding,
             'students' => $students,
             'periodes' => $periodes,
+            'dosens' => $dosens,
         ]);
     }
 
@@ -1785,5 +1880,330 @@ class AdminController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Display list of dosens.
+     */
+    public function dosens(Request $request): View
+    {
+        $search = $request->get('search', '');
+        $prodi = $request->get('prodi', '');
+
+        $query = Dosen::query();
+
+        // Search functionality
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_dosen', 'like', "%{$search}%")
+                  ->orWhere('kode_dosen', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by prodi
+        if ($prodi) {
+            $query->where('prodi', $prodi);
+        }
+
+        $dosens = $query->orderBy('nama_dosen', 'asc')->paginate(15);
+
+        // Get unique prodi for filter
+        $prodis = Dosen::distinct()->pluck('prodi')->filter()->sort()->values();
+
+        return view('admin.dosens.index', [
+            'dosens' => $dosens,
+            'search' => $search,
+            'prodi' => $prodi,
+            'prodis' => $prodis,
+        ]);
+    }
+
+    /**
+     * Show create dosen form.
+     */
+    public function createDosen(): View
+    {
+        return view('admin.dosens.create');
+    }
+
+    /**
+     * Store new dosen.
+     */
+    public function storeDosen(Request $request)
+    {
+        $request->validate([
+            'nama_dosen' => 'required|string|max:255',
+            'kode_dosen' => 'required|string|max:50|unique:dosens,kode_dosen',
+            'prodi' => 'required|string|max:255',
+            'nip' => 'required|string|max:50|unique:dosens,nip',
+        ]);
+
+        $dosen = Dosen::create([
+            'nama_dosen' => $request->nama_dosen,
+            'kode_dosen' => $request->kode_dosen,
+            'prodi' => $request->prodi,
+            'nip' => $request->nip,
+        ]);
+
+        \App\Models\Activity::log('create', 'Membuat data dosen baru: ' . $dosen->nama_dosen, 'Dosen', $dosen->id);
+
+        return redirect()->route('admin.dosens')
+            ->with('success', 'Data dosen berhasil ditambahkan!');
+    }
+
+    /**
+     * Show edit dosen form.
+     */
+    public function editDosen(Dosen $dosen): View
+    {
+        return view('admin.dosens.edit', [
+            'dosen' => $dosen,
+        ]);
+    }
+
+    /**
+     * Update dosen.
+     */
+    public function updateDosen(Request $request, Dosen $dosen)
+    {
+        $request->validate([
+            'nama_dosen' => 'required|string|max:255',
+            'kode_dosen' => 'required|string|max:50|unique:dosens,kode_dosen,' . $dosen->id,
+            'prodi' => 'required|string|max:255',
+            'nip' => 'required|string|max:50|unique:dosens,nip,' . $dosen->id,
+        ]);
+
+        $dosen->update([
+            'nama_dosen' => $request->nama_dosen,
+            'kode_dosen' => $request->kode_dosen,
+            'prodi' => $request->prodi,
+            'nip' => $request->nip,
+        ]);
+
+        \App\Models\Activity::log('update', 'Memperbarui data dosen: ' . $dosen->nama_dosen, 'Dosen', $dosen->id);
+
+        return redirect()->route('admin.dosens')
+            ->with('success', 'Data dosen berhasil diperbarui!');
+    }
+
+    /**
+     * Delete dosen.
+     */
+    public function deleteDosen(Dosen $dosen)
+    {
+        $namaDosen = $dosen->nama_dosen;
+        $dosenId = $dosen->id;
+
+        $dosen->delete();
+
+        \App\Models\Activity::log('delete', 'Menghapus data dosen: ' . $namaDosen, 'Dosen', $dosenId);
+
+        return redirect()->route('admin.dosens')
+            ->with('success', 'Data dosen berhasil dihapus!');
+    }
+
+    /**
+     * Export dosens to CSV.
+     */
+    public function exportDosens(Request $request)
+    {
+        $search = $request->get('search', '');
+        $prodi = $request->get('prodi', '');
+
+        $query = Dosen::query();
+
+        // Search functionality
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_dosen', 'like', "%{$search}%")
+                  ->orWhere('kode_dosen', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by prodi
+        if ($prodi) {
+            $query->where('prodi', $prodi);
+        }
+
+        $dosens = $query->orderBy('nama_dosen', 'asc')->get();
+
+        // Create CSV content
+        $csvData = [];
+
+        // Add headers
+        $csvData[] = [
+            'Nama Dosen',
+            'Kode Dosen',
+            'Program Studi',
+            'NIP',
+            'Tanggal Dibuat',
+            'Tanggal Diperbarui'
+        ];
+
+        // Add data rows
+        foreach ($dosens as $dosen) {
+            $csvData[] = [
+                $dosen->nama_dosen,
+                $dosen->kode_dosen,
+                $dosen->prodi,
+                $dosen->nip,
+                $dosen->created_at->format('Y-m-d H:i:s'),
+                $dosen->updated_at->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        // Generate filename with timestamp
+        $filename = 'dosens_export_' . date('Y-m-d_His') . '.csv';
+
+        // Set headers for CSV download
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        // Add BOM for UTF-8
+        $callback = function() use ($csvData) {
+            $file = fopen('php://output', 'w');
+            
+            // Add UTF-8 BOM
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Show import dosens form.
+     */
+    public function showImportDosens(): View
+    {
+        return view('admin.dosens.import');
+    }
+
+    /**
+     * Import dosens from CSV file.
+     */
+    public function importDosens(Request $request)
+    {
+        $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'max:5120', // 5MB max
+                function ($attribute, $value, $fail) {
+                    $allowedExtensions = ['csv', 'xlsx', 'xls'];
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($extension, $allowedExtensions)) {
+                        $fail('File harus berformat: ' . implode(', ', $allowedExtensions) . '.');
+                    }
+                },
+            ],
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+
+        try {
+            if ($extension === 'csv') {
+                // Handle CSV file
+                $handle = fopen($file->getRealPath(), 'r');
+                $header = fgetcsv($handle); // Get header row
+                
+                // Expected columns: nama_dosen, kode_dosen, prodi, nip
+                $rowNumber = 1;
+                
+                while (($row = fgetcsv($handle)) !== false) {
+                    $rowNumber++;
+                    
+                    // Skip empty rows
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    // Map CSV columns
+                    $data = array_combine($header, $row);
+                    
+                    // Clean data
+                    $namaDosen = trim($data['nama_dosen'] ?? '');
+                    $kodeDosen = trim($data['kode_dosen'] ?? '');
+                    $prodi = trim($data['prodi'] ?? '');
+                    $nip = trim($data['nip'] ?? '');
+
+                    // Validate required fields
+                    if (empty($namaDosen) || empty($kodeDosen) || empty($prodi) || empty($nip)) {
+                        $errors[] = "Baris {$rowNumber}: Semua kolom (nama_dosen, kode_dosen, prodi, nip) wajib diisi";
+                        $errorCount++;
+                        continue;
+                    }
+
+                    // Check if kode_dosen already exists
+                    if (Dosen::where('kode_dosen', $kodeDosen)->exists()) {
+                        $errors[] = "Baris {$rowNumber}: Kode dosen '{$kodeDosen}' sudah terdaftar";
+                        $errorCount++;
+                        continue;
+                    }
+
+                    // Check if nip already exists
+                    if (Dosen::where('nip', $nip)->exists()) {
+                        $errors[] = "Baris {$rowNumber}: NIP '{$nip}' sudah terdaftar";
+                        $errorCount++;
+                        continue;
+                    }
+
+                    // Create dosen
+                    try {
+                        Dosen::create([
+                            'nama_dosen' => $namaDosen,
+                            'kode_dosen' => $kodeDosen,
+                            'prodi' => $prodi,
+                            'nip' => $nip,
+                        ]);
+
+                        $successCount++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Baris {$rowNumber}: " . $e->getMessage();
+                        $errorCount++;
+                    }
+                }
+
+                fclose($handle);
+            } else {
+                return redirect()->back()
+                    ->with('error', 'Format file Excel belum didukung. Silakan gunakan format CSV.');
+            }
+
+            // Prepare response message
+            $message = "Import selesai! Berhasil: {$successCount}, Gagal: {$errorCount}";
+            
+            if ($errorCount > 0 && !empty($errors)) {
+                $message .= "\n\nError detail:\n" . implode("\n", array_slice($errors, 0, 10));
+                if (count($errors) > 10) {
+                    $message .= "\n... dan " . (count($errors) - 10) . " error lainnya";
+                }
+            }
+
+            if ($successCount > 0) {
+                \App\Models\Activity::log('import', "Import data dosen: {$successCount} berhasil, {$errorCount} gagal", 'Dosen', null);
+            }
+
+            return redirect()->route('admin.dosens')
+                ->with('success', $message)
+                ->with('import_errors', $errors);
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memproses file: ' . $e->getMessage());
+        }
     }
 }

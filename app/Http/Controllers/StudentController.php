@@ -78,7 +78,35 @@ class StudentController extends Controller
         if ($request->has('group_name')) {
             $results = [];
 
-            foreach ($request->file('files') as $typeSlug => $files) {
+            // Define all possible document types with their exact names
+            $allDocumentTypes = [
+                'Surat Pernyataan',
+                'Form Biodata Izajah & Transkip',
+                'KTP',
+                'Akta Lahir',
+                'Ijazah Pendidikan Terakhir',
+                'Buku TA yang Disahkan',
+                'Slide PPT',
+                'Screenshot (Gracias)',
+                'Berkas Referensi (Minimal 10)',
+                'Bukti Approval Revisi (SOFI)',
+                'Bukti Approval SKPI',
+                'Surat Keterangan Bebas Pustaka (SKBP)',
+                'Dokumen Cumlaude (Publikasi/Lomba/HKI)',
+                'Dokumen Pendukung Tambahan',
+            ];
+
+            // Create mapping from slug to actual type name
+            $documentTypeMap = [];
+            foreach ($allDocumentTypes as $typeName) {
+                $slug = \Illuminate\Support\Str::slug($typeName);
+                $documentTypeMap[$slug] = $typeName;
+            }
+
+            foreach ($request->file('files') as $typeSlug => $file) {
+                // Handle both single file and array of files (for backward compatibility)
+                $files = is_array($file) ? $file : [$file];
+                
                 foreach ($files as $file) {
                     if (!$file || !$file->isValid()) {
                         continue;
@@ -93,24 +121,57 @@ class StudentController extends Controller
                         continue;
                     }
 
-                    // Try to find existing document by slug matching existing document types
-                    $existingDocument = $submission->documents->first(function ($d) use ($typeSlug) {
-                        return \Illuminate\Support\Str::slug($d->type) === $typeSlug;
+                    // Get the correct type name from mapping
+                    $typeName = $documentTypeMap[$typeSlug] ?? null;
+                    
+                    // If not in mapping, try to find existing document by slug matching
+                    if (!$typeName) {
+                        $existingDocument = $submission->documents->first(function ($d) use ($typeSlug) {
+                            return \Illuminate\Support\Str::slug($d->type) === $typeSlug;
+                        });
+                        
+                        if ($existingDocument) {
+                            $typeName = $existingDocument->type;
+                        } else {
+                            // Last resort: try to find in all document types by comparing slugs
+                            foreach ($allDocumentTypes as $docType) {
+                                if (\Illuminate\Support\Str::slug($docType) === $typeSlug) {
+                                    $typeName = $docType;
+                                    break;
+                                }
+                            }
+                            
+                            // If still not found, use the slug converted to title case
+                            if (!$typeName) {
+                                $typeName = \Illuminate\Support\Str::title(str_replace('-', ' ', $typeSlug));
+                            }
+                        }
+                    }
+
+                    // Try to find existing document by exact type name match
+                    $existingDocument = $submission->documents->first(function ($d) use ($typeName) {
+                        return $d->type === $typeName;
                     });
 
                     $filePath = $file->store('yudisium/documents', 'private');
 
-                    $typeName = $existingDocument ? $existingDocument->type : \Illuminate\Support\Str::title(str_replace('-', ' ', $typeSlug));
-
+                    // Only allow replace if document is rejected or revision
                     if ($existingDocument) {
-                        $existingDocument->update([
-                            'file_path' => $filePath,
-                            'status' => 'pending',
-                            'feedback' => null,
-                        ]);
+                        // Check if document can be replaced (rejected or revision status)
+                        if (in_array($existingDocument->status, ['rejected', 'revision'])) {
+                            $existingDocument->update([
+                                'file_path' => $filePath,
+                                'name' => $file->getClientOriginalName(),
+                                'status' => 'pending',
+                                'feedback' => null,
+                            ]);
 
-                        \App\Models\Activity::log('upload', 'Mengunggah ulang dokumen: ' . $typeName, 'Document', $existingDocument->id);
-                        $document = $existingDocument;
+                            \App\Models\Activity::log('upload', 'Mengunggah ulang dokumen: ' . $typeName, 'Document', $existingDocument->id);
+                            $document = $existingDocument;
+                        } else {
+                            // Document already exists and cannot be replaced
+                            continue;
+                        }
                     } else {
                         $document = Document::create([
                             'submission_id' => $submission->id,
